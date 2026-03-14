@@ -1,0 +1,18 @@
+[
+  { "name": "Aarav", "meaning": "Peaceful", "origin": "Sanskrit", "gender": "Boy", "category": "Hindu" },
+  { "name": "Anaya", "meaning": "Caring", "origin": "Sanskrit", "gender": "Girl", "category": "Hindu" },
+  { "name": "Vivaan", "meaning": "Full of life", "origin": "Sanskrit", "gender": "Boy", "category": "Hindu" },
+  { "name": "Ishita", "meaning": "Desired", "origin": "Sanskrit", "gender": "Girl", "category": "Hindu" },
+  { "name": "Ayaan", "meaning": "Gift of God", "origin": "Arabic", "gender": "Boy", "category": "Muslim" },
+  { "name": "Zara", "meaning": "Blooming flower", "origin": "Arabic", "gender": "Girl", "category": "Muslim" },
+  { "name": "Rehan", "meaning": "Fragrant", "origin": "Arabic", "gender": "Boy", "category": "Muslim" },
+  { "name": "Inaya", "meaning": "Care", "origin": "Arabic", "gender": "Girl", "category": "Muslim" },
+  { "name": "Vihaan", "meaning": "Dawn", "origin": "Modern Indian", "gender": "Boy", "category": "Modern" },
+  { "name": "Kiara", "meaning": "Light", "origin": "Italian", "gender": "Girl", "category": "Modern" },
+  { "name": "Reyansh", "meaning": "Ray of light", "origin": "Modern Indian", "gender": "Boy", "category": "Modern" },
+  { "name": "Myra", "meaning": "Admirable", "origin": "Greek", "gender": "Girl", "category": "Modern" },
+  { "name": "Rudra", "meaning": "The fierce one", "origin": "Sanskrit", "gender": "Boy", "category": "Trending" },
+  { "name": "Aadhya", "meaning": "First power", "origin": "Sanskrit", "gender": "Girl", "category": "Trending" },
+  { "name": "Arjun", "meaning": "Bright", "origin": "Sanskrit", "gender": "Boy", "category": "Trending" },
+  { "name": "Aisha", "meaning": "Living", "origin": "Arabic", "gender": "Girl", "category": "Trending" }
+]

@@ -1,0 +1,44 @@
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import { FavoritesScreen } from '../screens/FavoritesScreen';
+import { GeneratorScreen } from '../screens/GeneratorScreen';
+import { TabParamList } from '../types';
+import { HomeStackNavigator } from './HomeStackNavigator';
+
+const Tab = createBottomTabNavigator<TabParamList>();
+
+export const BottomTabNavigator = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: '#E86A6A',
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 0,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarIcon: ({ color, size }) => {
+          if (route.name === 'HomeTab') {
+            return <MaterialCommunityIcons name="home-heart" size={size} color={color} />;
+          }
+
+          if (route.name === 'Generator') {
+            return <MaterialCommunityIcons name="creation" size={size} color={color} />;
+          }
+
+          return <MaterialCommunityIcons name="heart-multiple" size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: 'Home' }} />
+      <Tab.Screen name="Generator" component={GeneratorScreen} options={{ title: 'Generator' }} />
+      <Tab.Screen name="Favorites" component={FavoritesScreen} options={{ title: 'Favorites' }} />
+    </Tab.Navigator>
+  );
+};
