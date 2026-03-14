@@ -1,17 +1,16 @@
 export type GenderFilter = 'All' | 'Boy' | 'Girl';
 
-export type CategoryId = 'Hindu' | 'Muslim' | 'Modern' | 'Trending';
-
 export type BabyName = {
+  _id: string;
   name: string;
   meaning: string;
   origin: string;
   gender: 'Boy' | 'Girl';
-  category: CategoryId;
+  category: string;
 };
 
 export type CategoryItem = {
-  id: CategoryId;
+  id: string;
   title: string;
   icon: string;
   color: string;
@@ -20,12 +19,12 @@ export type CategoryItem = {
 export type HomeStackParamList = {
   Home: undefined;
   NameList: {
-    category: CategoryId;
+    category: string;
     title: string;
     initialQuery?: string;
   };
   NameDetail: {
-    babyName: BabyName;
+    nameId: string;
   };
 };
 

@@ -16,18 +16,18 @@ export const FavoritesScreen = () => {
 
       <FlatList
         data={favoriteNames}
-        keyExtractor={(item) => item.name}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={<Text style={styles.emptyText}>No favorites yet. Add from name list.</Text>}
         renderItem={({ item }) => (
           <NameCard
             item={item}
-            isFavorite={isFavorite(item.name)}
-            onToggleFavorite={() => removeFavorite(item.name)}
+            isFavorite={isFavorite(item._id)}
+            onToggleFavorite={() => removeFavorite(item._id)}
             onPress={() =>
               navigation.navigate('HomeTab' as never, {
                 screen: 'NameDetail',
-                params: { babyName: item },
+                params: { nameId: item._id },
               } as never)
             }
           />

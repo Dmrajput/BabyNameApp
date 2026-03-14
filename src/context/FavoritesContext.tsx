@@ -1,37 +1,38 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 
-import namesData from '../data/babyNames.json';
 import { BabyName } from '../types';
 
 type FavoritesContextValue = {
-  favorites: string[];
+  favorites: BabyName[];
   favoriteNames: BabyName[];
-  isFavorite: (name: string) => boolean;
-  toggleFavorite: (name: string) => void;
-  removeFavorite: (name: string) => void;
+  isFavorite: (id: string) => boolean;
+  toggleFavorite: (item: BabyName) => void;
+  removeFavorite: (id: string) => void;
 };
 
 const FavoritesContext = createContext<FavoritesContextValue | undefined>(undefined);
 
 export const FavoritesProvider = ({ children }: { children: React.ReactNode }) => {
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<BabyName[]>([]);
 
-  const favoriteNames = useMemo(() => {
-    const typedData = namesData as BabyName[];
-    return typedData.filter((item) => favorites.includes(item.name));
-  }, [favorites]);
+  const favoriteNames = useMemo(() => favorites, [favorites]);
 
-  const toggleFavorite = (name: string) => {
-    setFavorites((current) =>
-      current.includes(name) ? current.filter((value) => value !== name) : [...current, name]
-    );
+  const toggleFavorite = (item: BabyName) => {
+    setFavorites((current) => {
+      const exists = current.some((value) => value._id === item._id);
+      if (exists) {
+        return current.filter((value) => value._id !== item._id);
+      }
+
+      return [...current, item];
+    });
   };
 
-  const removeFavorite = (name: string) => {
-    setFavorites((current) => current.filter((value) => value !== name));
+  const removeFavorite = (id: string) => {
+    setFavorites((current) => current.filter((value) => value._id !== id));
   };
 
-  const isFavorite = (name: string) => favorites.includes(name);
+  const isFavorite = (id: string) => favorites.some((item) => item._id === id);
 
   const value: FavoritesContextValue = {
     favorites,

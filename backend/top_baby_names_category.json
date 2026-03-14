@@ -1,0 +1,642 @@
+[
+  {
+    "id": 1,
+    "name": "Aarav",
+    "meaning": "Peaceful",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 2,
+    "name": "Aditi",
+    "meaning": "Mother of gods",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 3,
+    "name": "Arjun",
+    "meaning": "Bright, shining",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 4,
+    "name": "Anaya",
+    "meaning": "Caring, protection",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 5,
+    "name": "Vihaan",
+    "meaning": "Morning dawn",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 6,
+    "name": "Ishaan",
+    "meaning": "Sun, Lord Shiva",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 7,
+    "name": "Saanvi",
+    "meaning": "Goddess Lakshmi",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 8,
+    "name": "Aarohi",
+    "meaning": "Musical note ascending",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 9,
+    "name": "Rudra",
+    "meaning": "Lord Shiva",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 10,
+    "name": "Lakshmi",
+    "meaning": "Goddess of wealth",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 11,
+    "name": "Krishna",
+    "meaning": "Dark, Lord Krishna",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 12,
+    "name": "Meera",
+    "meaning": "Devotee of Krishna",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 13,
+    "name": "Aditya",
+    "meaning": "Sun God",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 14,
+    "name": "Kavya",
+    "meaning": "Poetry",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 15,
+    "name": "Aryan",
+    "meaning": "Noble",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 16,
+    "name": "Ira",
+    "meaning": "Earth, Saraswati",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 17,
+    "name": "Atharv",
+    "meaning": "Vedic scholar",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 18,
+    "name": "Diya",
+    "meaning": "Lamp, light",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 19,
+    "name": "Om",
+    "meaning": "Sacred syllable",
+    "origin": "Sanskrit",
+    "gender": "Boy",
+    "category": "Hindu"
+  },
+  {
+    "id": 20,
+    "name": "Tanvi",
+    "meaning": "Delicate, beautiful",
+    "origin": "Sanskrit",
+    "gender": "Girl",
+    "category": "Hindu"
+  },
+  {
+    "id": 21,
+    "name": "Ayaan",
+    "meaning": "Gift of God",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 22,
+    "name": "Aisha",
+    "meaning": "Living, prosperous",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 23,
+    "name": "Zayan",
+    "meaning": "Graceful",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 24,
+    "name": "Fatima",
+    "meaning": "Captivating",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 25,
+    "name": "Rehan",
+    "meaning": "Fragrant plant",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 26,
+    "name": "Inaya",
+    "meaning": "Care, concern",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 27,
+    "name": "Imran",
+    "meaning": "Prosperity",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 28,
+    "name": "Zara",
+    "meaning": "Princess, flower",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 29,
+    "name": "Ibrahim",
+    "meaning": "Father of nations",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 30,
+    "name": "Amina",
+    "meaning": "Trustworthy",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 31,
+    "name": "Yusuf",
+    "meaning": "God increases",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 32,
+    "name": "Noor",
+    "meaning": "Light",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 33,
+    "name": "Faizan",
+    "meaning": "Grace, favor",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 34,
+    "name": "Sana",
+    "meaning": "Brilliance",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 35,
+    "name": "Hamza",
+    "meaning": "Strong, lion",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 36,
+    "name": "Alina",
+    "meaning": "Beautiful, noble",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 37,
+    "name": "Bilal",
+    "meaning": "Moistening",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 38,
+    "name": "Hafsa",
+    "meaning": "Young lioness",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 39,
+    "name": "Rayyan",
+    "meaning": "Gate of heaven",
+    "origin": "Arabic",
+    "gender": "Boy",
+    "category": "Muslim"
+  },
+  {
+    "id": 40,
+    "name": "Maryam",
+    "meaning": "Beloved",
+    "origin": "Arabic",
+    "gender": "Girl",
+    "category": "Muslim"
+  },
+  {
+    "id": 41,
+    "name": "John",
+    "meaning": "God is gracious",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 42,
+    "name": "Mary",
+    "meaning": "Beloved",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 43,
+    "name": "David",
+    "meaning": "Beloved king",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 44,
+    "name": "Sarah",
+    "meaning": "Princess",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 45,
+    "name": "Daniel",
+    "meaning": "God is my judge",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 46,
+    "name": "Grace",
+    "meaning": "Blessing",
+    "origin": "Latin",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 47,
+    "name": "Joseph",
+    "meaning": "God will increase",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 48,
+    "name": "Anna",
+    "meaning": "Grace",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 49,
+    "name": "Matthew",
+    "meaning": "Gift of God",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 50,
+    "name": "Ruth",
+    "meaning": "Friend",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 51,
+    "name": "Samuel",
+    "meaning": "Heard by God",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 52,
+    "name": "Elizabeth",
+    "meaning": "God's promise",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 53,
+    "name": "James",
+    "meaning": "Supplanter",
+    "origin": "Hebrew",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 54,
+    "name": "Martha",
+    "meaning": "Lady",
+    "origin": "Aramaic",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 55,
+    "name": "Paul",
+    "meaning": "Small, humble",
+    "origin": "Latin",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 56,
+    "name": "Rebecca",
+    "meaning": "To bind",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 57,
+    "name": "Peter",
+    "meaning": "Rock",
+    "origin": "Greek",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 58,
+    "name": "Julia",
+    "meaning": "Youthful",
+    "origin": "Latin",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 59,
+    "name": "Thomas",
+    "meaning": "Twin",
+    "origin": "Aramaic",
+    "gender": "Boy",
+    "category": "Christian"
+  },
+  {
+    "id": 60,
+    "name": "Hannah",
+    "meaning": "Favor, grace",
+    "origin": "Hebrew",
+    "gender": "Girl",
+    "category": "Christian"
+  },
+  {
+    "id": 61,
+    "name": "Gurpreet",
+    "meaning": "Love of the Guru",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 62,
+    "name": "Harpreet",
+    "meaning": "Beloved of God",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 63,
+    "name": "Jasleen",
+    "meaning": "Absorbed in praise",
+    "origin": "Punjabi",
+    "gender": "Girl",
+    "category": "Sikh"
+  },
+  {
+    "id": 64,
+    "name": "Manpreet",
+    "meaning": "Heart full of love",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 65,
+    "name": "Amrit",
+    "meaning": "Nectar, divine",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 66,
+    "name": "Simran",
+    "meaning": "Remembrance of God",
+    "origin": "Punjabi",
+    "gender": "Girl",
+    "category": "Sikh"
+  },
+  {
+    "id": 67,
+    "name": "Gurleen",
+    "meaning": "One absorbed in Guru",
+    "origin": "Punjabi",
+    "gender": "Girl",
+    "category": "Sikh"
+  },
+  {
+    "id": 68,
+    "name": "Harjit",
+    "meaning": "Victory of God",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 69,
+    "name": "Navjot",
+    "meaning": "New light",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 70,
+    "name": "Baljit",
+    "meaning": "Strong victory",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 71,
+    "name": "Jaspreet",
+    "meaning": "Love of fame",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 72,
+    "name": "Kuldeep",
+    "meaning": "Light of family",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 73,
+    "name": "Rajveer",
+    "meaning": "Brave king",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 74,
+    "name": "Sukhpreet",
+    "meaning": "Peaceful love",
+    "origin": "Punjabi",
+    "gender": "Unisex",
+    "category": "Sikh"
+  },
+  {
+    "id": 75,
+    "name": "Param",
+    "meaning": "Supreme",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 76,
+    "name": "Tejinder",
+    "meaning": "God of brilliance",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 77,
+    "name": "Harleen",
+    "meaning": "Absorbed in God",
+    "origin": "Punjabi",
+    "gender": "Girl",
+    "category": "Sikh"
+  },
+  {
+    "id": 78,
+    "name": "Daljeet",
+    "meaning": "Victory of army",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 79,
+    "name": "Gursharan",
+    "meaning": "Refuge of Guru",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  },
+  {
+    "id": 80,
+    "name": "Amardeep",
+    "meaning": "Eternal light",
+    "origin": "Punjabi",
+    "gender": "Boy",
+    "category": "Sikh"
+  }
+]

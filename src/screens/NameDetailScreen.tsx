@@ -1,18 +1,43 @@
-import React from 'react';
-import { Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useFavorites } from '../context/FavoritesContext';
-import { HomeStackParamList } from '../types';
+import { getNameById } from '../services/api';
+import { BabyName, HomeStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'NameDetail'>;
 
 export const NameDetailScreen = ({ route }: Props) => {
-  const { babyName } = route.params;
+  const { nameId } = route.params;
+  const [babyName, setBabyName] = useState<BabyName | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   const { isFavorite, toggleFavorite } = useFavorites();
 
+  useEffect(() => {
+    const loadNameDetails = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await getNameById(nameId);
+        setBabyName(data);
+      } catch (_error) {
+        setError('Unable to load details. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadNameDetails();
+  }, [nameId]);
+
   const onShare = async () => {
+    if (!babyName) {
+      return;
+    }
+
     try {
       await Share.share({
         message: `${babyName.name}: ${babyName.meaning} (${babyName.origin}, ${babyName.gender})`,
@@ -22,7 +47,23 @@ export const NameDetailScreen = ({ route }: Props) => {
     }
   };
 
-  const favorite = isFavorite(babyName.name);
+  const favorite = babyName ? isFavorite(babyName._id) : false;
+
+  if (loading) {
+    return (
+      <View style={styles.centerState}>
+        <ActivityIndicator color="#E86A6A" />
+      </View>
+    );
+  }
+
+  if (error || !babyName) {
+    return (
+      <View style={styles.centerState}>
+        <Text style={styles.errorText}>{error || 'Name not found.'}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -41,7 +82,7 @@ export const NameDetailScreen = ({ route }: Props) => {
         </View>
 
         <View style={styles.buttonRow}>
-          <Pressable style={styles.actionButton} onPress={() => toggleFavorite(babyName.name)}>
+          <Pressable style={styles.actionButton} onPress={() => toggleFavorite(babyName)}>
             <MaterialCommunityIcons
               name={favorite ? 'heart' : 'heart-outline'}
               size={20}
@@ -61,6 +102,17 @@ export const NameDetailScreen = ({ route }: Props) => {
 };
 
 const styles = StyleSheet.create({
+  centerState: {
+    flex: 1,
+    backgroundColor: '#FFF9F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 14,
+  },
   screen: {
     flex: 1,
     backgroundColor: '#FFF9F5',

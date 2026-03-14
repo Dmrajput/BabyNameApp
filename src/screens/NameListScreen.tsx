@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { NameCard } from '../components/NameCard';
 import { SearchBar } from '../components/SearchBar';
 import { useFavorites } from '../context/FavoritesContext';
-import namesData from '../data/babyNames.json';
+import { getNamesByCategory } from '../services/api';
 import { BabyName, GenderFilter, HomeStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'NameList'>;
@@ -17,13 +17,30 @@ export const NameListScreen = ({ route, navigation }: Props) => {
   const [query, setQuery] = useState(initialQuery ?? '');
   const [gender, setGender] = useState<GenderFilter>('All');
   const [selectedLetter, setSelectedLetter] = useState<string>('All');
+  const [allNames, setAllNames] = useState<BabyName[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const names = useMemo(() => {
-    const typedData = namesData as BabyName[];
+  useEffect(() => {
+    const loadNames = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await getNamesByCategory(category);
+        setAllNames(data);
+      } catch (_error) {
+        setError('Unable to load names. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return typedData.filter((item) => {
-      const matchesCategory = item.category === category;
+    void loadNames();
+  }, [category]);
+
+  const names = useMemo(() => {
+    return allNames.filter((item) => {
       const matchesSearch =
         !query.trim() ||
         item.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -31,9 +48,9 @@ export const NameListScreen = ({ route, navigation }: Props) => {
       const matchesGender = gender === 'All' || item.gender === gender;
       const matchesLetter = selectedLetter === 'All' || item.name.startsWith(selectedLetter);
 
-      return matchesCategory && matchesSearch && matchesGender && matchesLetter;
+      return matchesSearch && matchesGender && matchesLetter;
     });
-  }, [category, gender, query, selectedLetter]);
+  }, [allNames, gender, query, selectedLetter]);
 
   return (
     <View style={styles.screen}>
@@ -75,16 +92,19 @@ export const NameListScreen = ({ route, navigation }: Props) => {
 
       <FlatList
         data={names}
-        keyExtractor={(item) => item.name}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          loading ? <ActivityIndicator color="#E86A6A" style={styles.loader} /> : error ? <Text style={styles.errorText}>{error}</Text> : null
+        }
         ListEmptyComponent={<Text style={styles.emptyText}>No names match your filters.</Text>}
         renderItem={({ item }) => (
           <NameCard
             item={item}
-            isFavorite={isFavorite(item.name)}
-            onToggleFavorite={() => toggleFavorite(item.name)}
-            onPress={() => navigation.navigate('NameDetail', { babyName: item })}
+            isFavorite={isFavorite(item._id)}
+            onToggleFavorite={() => toggleFavorite(item)}
+            onPress={() => navigation.navigate('NameDetail', { nameId: item._id })}
           />
         )}
       />
@@ -146,6 +166,14 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 24,
+  },
+  loader: {
+    marginVertical: 10,
+  },
+  errorText: {
+    color: '#B91C1C',
+    marginBottom: 10,
+    fontSize: 13,
   },
   emptyText: {
     textAlign: 'center',
