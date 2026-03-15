@@ -1,5 +1,11 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -8,6 +14,11 @@ import {
     Text,
     View,
 } from "react-native";
+import {
+    AdEventType,
+    InterstitialAd,
+    TestIds,
+} from "react-native-google-mobile-ads";
 
 import { NameCard } from "../components/NameCard";
 import { SearchBar } from "../components/SearchBar";
@@ -18,6 +29,20 @@ import { BabyName, GenderFilter, HomeStackParamList } from "../types";
 type Props = NativeStackScreenProps<HomeStackParamList, "NameList">;
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const AD_TRIGGER_EVERY_OPENS = 10;
+const AD_SHOW_DELAY_MS = 300;
+const AD_RETRY_DELAY_MS = 15_000;
+
+const INTERSTITIAL_TEST_OR_PROD_ID = __DEV__
+  ? TestIds.INTERSTITIAL
+  : process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID;
+
+const getRandomCooldownMs = () => {
+  // Show interstitial in a 90-120s window to avoid aggressive ad frequency.
+  const min = 90_000;
+  const max = 120_000;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 export const NameListScreen = ({ route, navigation }: Props) => {
   const { category, initialQuery } = route.params;
@@ -27,7 +52,135 @@ export const NameListScreen = ({ route, navigation }: Props) => {
   const [allNames, setAllNames] = useState<BabyName[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [isInterstitialLoaded, setIsInterstitialLoaded] = useState(false);
+  const [adError, setAdError] = useState<string>("");
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  // Create one interstitial instance for this screen lifecycle.
+  const interstitialRef = useRef(
+    INTERSTITIAL_TEST_OR_PROD_ID
+      ? InterstitialAd.createForAdRequest(INTERSTITIAL_TEST_OR_PROD_ID, {
+          requestNonPersonalizedAdsOnly: true,
+        })
+      : null,
+  );
+  const openCountRef = useRef(0);
+  const lastShownAtRef = useRef(0);
+  const nextCooldownMsRef = useRef(getRandomCooldownMs());
+  const isMountedRef = useRef(true);
+  const isAdShowingRef = useRef(false);
+  const showTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const tryShowInterstitial = useCallback(() => {
+    const now = Date.now();
+    const cooldownFinished =
+      now - lastShownAtRef.current >= nextCooldownMsRef.current;
+
+    // Policy-safe guard: only show when loaded and cooldown has passed.
+    if (
+      !isInterstitialLoaded ||
+      !cooldownFinished ||
+      !interstitialRef.current ||
+      isAdShowingRef.current
+    ) {
+      return;
+    }
+
+    try {
+      isAdShowingRef.current = true;
+      interstitialRef.current.show();
+    } catch {
+      isAdShowingRef.current = false;
+      // Never block user flow on ad failures.
+    }
+  }, [isInterstitialLoaded]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    if (!interstitialRef.current) {
+      if (!__DEV__) {
+        setAdError(
+          "Ad unit ID is not configured. Set EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID in .env.",
+        );
+      }
+      return;
+    }
+
+    // Subscribe to ad lifecycle events once on mount.
+    const ad = interstitialRef.current;
+
+    const unsubscribeLoaded = ad.addAdEventListener(AdEventType.LOADED, () => {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setIsInterstitialLoaded(true);
+      setAdError("");
+    });
+
+    const unsubscribeError = ad.addAdEventListener(
+      AdEventType.ERROR,
+      (eventError) => {
+        isAdShowingRef.current = false;
+
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        setIsInterstitialLoaded(false);
+        setAdError(eventError?.message ?? "Ad failed to load.");
+
+        if (retryTimeoutRef.current) {
+          clearTimeout(retryTimeoutRef.current);
+        }
+
+        // Retry loading safely after a short delay.
+        retryTimeoutRef.current = setTimeout(() => {
+          if (!isMountedRef.current) {
+            return;
+          }
+          ad.load();
+        }, AD_RETRY_DELAY_MS);
+      },
+    );
+
+    const unsubscribeClosed = ad.addAdEventListener(AdEventType.CLOSED, () => {
+      isAdShowingRef.current = false;
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setIsInterstitialLoaded(false);
+      lastShownAtRef.current = Date.now();
+      nextCooldownMsRef.current = getRandomCooldownMs();
+
+      // Preload the next ad after close for future natural trigger.
+      ad.load();
+    });
+
+    // Load an interstitial when screen mounts (but do not show immediately).
+    ad.load();
+
+    return () => {
+      isMountedRef.current = false;
+      isAdShowingRef.current = false;
+
+      if (showTimeoutRef.current) {
+        clearTimeout(showTimeoutRef.current);
+      }
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+
+      unsubscribeLoaded();
+      unsubscribeError();
+      unsubscribeClosed();
+    };
+  }, []);
 
   useEffect(() => {
     const loadNames = async () => {
@@ -128,6 +281,8 @@ export const NameListScreen = ({ route, navigation }: Props) => {
             <ActivityIndicator color="#E86A6A" style={styles.loader} />
           ) : error ? (
             <Text style={styles.errorText}>{error}</Text>
+          ) : __DEV__ && adError ? (
+            <Text style={styles.adDebugText}>Ad: {adError}</Text>
           ) : null
         }
         ListEmptyComponent={
@@ -138,9 +293,22 @@ export const NameListScreen = ({ route, navigation }: Props) => {
             item={item}
             isFavorite={isFavorite(item._id)}
             onToggleFavorite={() => toggleFavorite(item)}
-            onPress={() =>
-              navigation.navigate("NameDetail", { nameId: item._id })
-            }
+            onPress={() => {
+              // Natural action trigger: every 10 name opens.
+              openCountRef.current += 1;
+              navigation.navigate("NameDetail", { nameId: item._id });
+
+              if (openCountRef.current % AD_TRIGGER_EVERY_OPENS === 0) {
+                // Slight delay keeps navigation feeling responsive.
+                if (showTimeoutRef.current) {
+                  clearTimeout(showTimeoutRef.current);
+                }
+
+                showTimeoutRef.current = setTimeout(() => {
+                  tryShowInterstitial();
+                }, AD_SHOW_DELAY_MS);
+              }
+            }}
           />
         )}
       />
@@ -232,6 +400,11 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     marginBottom: 10,
     fontSize: 13,
+  },
+  adDebugText: {
+    color: "#64748B",
+    marginBottom: 10,
+    fontSize: 12,
   },
   emptyText: {
     textAlign: "center",
