@@ -104,7 +104,7 @@ async function generateName(req, res) {
         message: `gender must be one of: ${allowedGenders.join(', ')}`,
       });
     }
-console.log('Received AI generation request with:', { fatherName, motherName, gender });
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return res.status(500).json({
@@ -117,7 +117,7 @@ console.log('Received AI generation request with:', { fatherName, motherName, ge
     const prompt = `Generate 10 unique baby names using the following information.\n\nFather name: ${fatherName}\nMother name: ${motherName}\nPreferred gender: ${gender}\n\nRules:\n\n- Use parts of both parent names\n- Names should sound natural\n- Prefer Indian or Sanskrit-style names\n- Each name must include a short meaning\n- Avoid duplicate names\n\nReturn the result strictly in JSON format:\n\n[\n  {\n    \"name\": \"Riyaan\",\n    \"meaning\": \"Melodious and graceful\",\n    \"gender\": \"${gender}\"\n  },\n  {\n    \"name\": \"Priyav\",\n    \"meaning\": \"Beloved and kind\",\n    \"gender\": \"${gender}\"\n  }\n]`;
 
     let completion;
-    // try {
+    try {
       completion = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -132,18 +132,16 @@ console.log('Received AI generation request with:', { fatherName, motherName, ge
         ],
         temperature: 0.9,
       });
-      console.log('AI model response received.',completion);
-    // } catch (_modelError) {
-    //   const fallback = generateFallbackNames(fatherName, motherName, gender);
-    //   if (fallback.length > 0) {
-    //     return res.status(200).json(fallback);
-    //   }
+    } catch (_modelError) {
+      const fallback = generateFallbackNames(fatherName, motherName, gender);
+      if (fallback.length > 0) {
+        return res.status(200).json(fallback);
+      }
 
-    //   return res.status(502).json({ message: 'Failed to generate names from AI model.' });
-    // }
+      return res.status(502).json({ message: 'Failed to generate names from AI model.' });
+    }
 
     const raw = completion.choices?.[0]?.message?.content;
-    console.log('Raw AI response:', raw);
     if (!raw) {
       return res.status(502).json({ message: 'Empty response from AI model.' });
     }
