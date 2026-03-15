@@ -1,6 +1,8 @@
 const dotenv = require("dotenv");
+const path = require("path");
 
-dotenv.config({ override: true });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 function getMongoUri() {
   const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;

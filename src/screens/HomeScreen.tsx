@@ -3,7 +3,6 @@ import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-nativ
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { CategoryCard } from '../components/CategoryCard';
-import { SearchBar } from '../components/SearchBar';
 import { getNames } from '../services/api';
 import { CategoryItem, HomeStackParamList } from '../types';
 
@@ -53,26 +52,19 @@ export const HomeScreen = ({ navigation }: Props) => {
   }, []);
 
   const filteredCategories = useMemo(() => {
-    if (!query.trim()) {
-      return categories;
-    }
-
-    const normalized = query.toLowerCase();
-    return categories.filter((item) => item.title.toLowerCase().includes(normalized));
-  }, [query]);
+    return categories;
+  }, [categories]);
 
   return (
     <View style={styles.screen}>
       <Text style={styles.heading}>Baby Name Finder</Text>
       <Text style={styles.subheading}>Find beautiful names with meaning and origin.</Text>
 
-      <SearchBar value={query} onChangeText={setQuery} placeholder="Search categories or prepare a name search" />
-
       {loading ? <ActivityIndicator color="#E86A6A" style={styles.loader} /> : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <FlatList
-        data={filteredCategories}
+        data={categories}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.listContent}
@@ -86,7 +78,6 @@ export const HomeScreen = ({ navigation }: Props) => {
               navigation.navigate('NameList', {
                 category: item.id,
                 title: item.title,
-                initialQuery: query,
               })
             }
           />

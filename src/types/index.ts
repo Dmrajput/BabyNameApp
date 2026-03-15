@@ -1,12 +1,20 @@
 export type GenderFilter = 'All' | 'Boy' | 'Girl';
 
+export type NameGender = 'Boy' | 'Girl' | 'Unisex';
+
 export type BabyName = {
   _id: string;
   name: string;
   meaning: string;
   origin: string;
-  gender: 'Boy' | 'Girl';
+  gender: NameGender;
   category: string;
+};
+
+export type GeneratedName = {
+  name: string;
+  meaning: string;
+  gender: NameGender;
 };
 
 export type CategoryItem = {

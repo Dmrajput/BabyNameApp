@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const config = require('./config/env');
 const authRoutes = require('./routes/authRoutes');
 const nameRoutes = require('./routes/nameRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 const port = config.port;
@@ -18,6 +19,7 @@ app.get('/', (_req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/api/names', nameRoutes);
+app.use('/api', aiRoutes);
 
 async function startServer() {
   await mongoose.connect(config.mongodbUri);

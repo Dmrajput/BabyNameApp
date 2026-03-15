@@ -21,12 +21,42 @@ const API_BASE_URL = (
       : platformFallback
 ).replace(/\/$/, "");
 
+async function buildError(response) {
+  const text = await response.text();
+
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed?.message) {
+      return new Error(parsed.message);
+    }
+  } catch (_error) {
+    // Ignore JSON parse failures and fall back to raw text.
+  }
+
+  return new Error(text || "Request failed");
+}
+
 async function request(path) {
   const response = await fetch(`${API_BASE_URL}${path}`);
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Request failed");
+    throw await buildError(response);
+  }
+
+  return response.json();
+}
+
+async function post(path, body) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw await buildError(response);
   }
 
   return response.json();
@@ -41,3 +71,10 @@ export const searchNames = async (query) =>
   request(`/api/names/search?q=${encodeURIComponent(query)}`);
 
 export const getNameById = async (id) => request(`/api/names/${id}`);
+
+export const generateBabyNames = async (fatherName, motherName, gender) =>
+  post('/api/generate-name', {
+    fatherName,
+    motherName,
+    gender,
+  });

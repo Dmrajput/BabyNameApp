@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { NameCard } from '../components/NameCard';
@@ -24,12 +24,17 @@ export const FavoritesScreen = () => {
             item={item}
             isFavorite={isFavorite(item._id)}
             onToggleFavorite={() => removeFavorite(item._id)}
-            onPress={() =>
+            onPress={() => {
+              if (item.category === 'AI') {
+                Alert.alert('AI name details are already shown on this card.');
+                return;
+              }
+
               navigation.navigate('HomeTab' as never, {
                 screen: 'NameDetail',
                 params: { nameId: item._id },
-              } as never)
-            }
+              } as never);
+            }}
           />
         )}
       />
