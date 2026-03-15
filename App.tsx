@@ -1,17 +1,20 @@
-import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { FavoritesProvider } from './src/context/FavoritesContext';
-import { AppNavigator } from './src/navigation/AppNavigator';
+import { AuthProvider } from "./src/context/AuthContext";
+import { FavoritesProvider } from "./src/context/FavoritesContext";
+import { AppNavigator } from "./src/navigation/AppNavigator";
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <FavoritesProvider>
-        <StatusBar style="dark" />
-        <AppNavigator />
-      </FavoritesProvider>
+      <AuthProvider>
+        <FavoritesProvider>
+          <StatusBar style="dark" />
+          <AppNavigator />
+        </FavoritesProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

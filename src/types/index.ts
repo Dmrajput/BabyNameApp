@@ -1,6 +1,6 @@
-export type GenderFilter = 'All' | 'Boy' | 'Girl';
+export type GenderFilter = "All" | "Boy" | "Girl";
 
-export type NameGender = 'Boy' | 'Girl' | 'Unisex';
+export type NameGender = "Boy" | "Girl" | "Unisex";
 
 export type BabyName = {
   _id: string;
@@ -41,4 +41,5 @@ export type TabParamList = {
   HomeTab: undefined;
   Generator: undefined;
   Favorites: undefined;
+  Profile: undefined;
 };

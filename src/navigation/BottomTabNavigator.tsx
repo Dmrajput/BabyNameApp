@@ -1,11 +1,12 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import React from "react";
 
-import { FavoritesScreen } from '../screens/FavoritesScreen';
-import { GeneratorScreen } from '../screens/GeneratorScreen';
-import { TabParamList } from '../types';
-import { HomeStackNavigator } from './HomeStackNavigator';
+import { FavoritesScreen } from "../screens/FavoritesScreen";
+import { GeneratorScreen } from "../screens/GeneratorScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
+import { TabParamList } from "../types";
+import { HomeStackNavigator } from "./HomeStackNavigator";
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -14,31 +15,76 @@ export const BottomTabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#E86A6A',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: "#E86A6A",
+        tabBarInactiveTintColor: "#94A3B8",
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: "#FFFFFF",
           borderTopWidth: 0,
           height: 64,
           paddingBottom: 8,
           paddingTop: 8,
         },
         tabBarIcon: ({ color, size }) => {
-          if (route.name === 'HomeTab') {
-            return <MaterialCommunityIcons name="home-heart" size={size} color={color} />;
+          if (route.name === "HomeTab") {
+            return (
+              <MaterialCommunityIcons
+                name="home-heart"
+                size={size}
+                color={color}
+              />
+            );
           }
 
-          if (route.name === 'Generator') {
-            return <MaterialCommunityIcons name="creation" size={size} color={color} />;
+          if (route.name === "Generator") {
+            return (
+              <MaterialCommunityIcons
+                name="creation"
+                size={size}
+                color={color}
+              />
+            );
           }
 
-          return <MaterialCommunityIcons name="heart-multiple" size={size} color={color} />;
+          if (route.name === "Profile") {
+            return (
+              <MaterialCommunityIcons
+                name="account-circle"
+                size={size}
+                color={color}
+              />
+            );
+          }
+
+          return (
+            <MaterialCommunityIcons
+              name="heart-multiple"
+              size={size}
+              color={color}
+            />
+          );
         },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: 'Home' }} />
-      <Tab.Screen name="Generator" component={GeneratorScreen} options={{ title: 'Generator' }} />
-      <Tab.Screen name="Favorites" component={FavoritesScreen} options={{ title: 'Favorites' }} />
+      <Tab.Screen
+        name="HomeTab"
+        component={HomeStackNavigator}
+        options={{ title: "Home" }}
+      />
+      <Tab.Screen
+        name="Generator"
+        component={GeneratorScreen}
+        options={{ title: "Generator" }}
+      />
+      <Tab.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{ title: "Favorites" }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: "Profile" }}
+      />
     </Tab.Navigator>
   );
 };
