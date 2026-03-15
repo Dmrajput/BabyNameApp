@@ -9,6 +9,7 @@ export type BabyName = {
   origin: string;
   gender: NameGender;
   category: string;
+  rating?: number;
 };
 
 export type GeneratedName = {

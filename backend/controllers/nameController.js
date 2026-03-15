@@ -3,7 +3,7 @@ const BabyName = require("../models/BabyName");
 async function getAllNames(_req, res) {
   console.log("Fetching all names");
   try {
-    const names = await BabyName.find().sort({ name: 1 });
+    const names = await BabyName.find().sort({ rating: -1, name: 1 });
     return res.status(200).json(names);
   } catch (_error) {
     return res.status(500).json({ message: "Failed to fetch names." });
@@ -21,7 +21,7 @@ async function getNamesByCategory(req, res) {
 
     const names = await BabyName.find({
       category: new RegExp(`^${category}$`, "i"),
-    }).sort({ name: 1 });
+    }).sort({ rating: -1, name: 1 });
     return res.status(200).json(names);
   } catch (_error) {
     return res
@@ -42,7 +42,7 @@ async function searchNames(req, res) {
 
     const names = await BabyName.find({
       name: { $regex: query, $options: "i" },
-    }).sort({ name: 1 });
+    }).sort({ rating: -1, name: 1 });
 
     return res.status(200).json(names);
   } catch (_error) {

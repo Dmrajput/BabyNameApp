@@ -1,54 +1,58 @@
-const OpenAI = require('openai');
+const OpenAI = require("openai");
 
-const allowedGenders = ['Boy', 'Girl', 'Unisex'];
+const allowedGenders = ["Boy", "Girl", "Unisex"];
 const fallbackMeanings = [
-  'Radiant and graceful',
-  'Beloved and kind',
-  'Calm and peaceful spirit',
-  'Bright and joyful',
-  'Strong and noble',
-  'Wise and thoughtful',
-  'Pure and gentle',
-  'Prosperous and fortunate',
-  'Courageous and compassionate',
-  'Harmonious and serene',
+  "Radiant and graceful",
+  "Beloved and kind",
+  "Calm and peaceful spirit",
+  "Bright and joyful",
+  "Strong and noble",
+  "Wise and thoughtful",
+  "Pure and gentle",
+  "Prosperous and fortunate",
+  "Courageous and compassionate",
+  "Harmonious and serene",
 ];
 
 function extractJsonArray(text) {
   const trimmed = text.trim();
 
-  if (trimmed.startsWith('[')) {
+  if (trimmed.startsWith("[")) {
     return JSON.parse(trimmed);
   }
 
   const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (codeBlockMatch) {
     const candidate = codeBlockMatch[1].trim();
-    if (candidate.startsWith('[')) {
+    if (candidate.startsWith("[")) {
       return JSON.parse(candidate);
     }
   }
 
-  const firstBracket = trimmed.indexOf('[');
-  const lastBracket = trimmed.lastIndexOf(']');
+  const firstBracket = trimmed.indexOf("[");
+  const lastBracket = trimmed.lastIndexOf("]");
   if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
     return JSON.parse(trimmed.slice(firstBracket, lastBracket + 1));
   }
 
-  throw new Error('AI response did not include a JSON array.');
+  throw new Error("AI response did not include a JSON array.");
 }
 
 function capitalize(value) {
   if (!value) {
-    return '';
+    return "";
   }
 
   return value[0].toUpperCase() + value.slice(1).toLowerCase();
 }
 
 function generateFallbackNames(fatherName, motherName, gender) {
-  const father = String(fatherName || '').trim().toLowerCase();
-  const mother = String(motherName || '').trim().toLowerCase();
+  const father = String(fatherName || "")
+    .trim()
+    .toLowerCase();
+  const mother = String(motherName || "")
+    .trim()
+    .toLowerCase();
 
   if (!father || !mother) {
     return [];
@@ -75,7 +79,11 @@ function generateFallbackNames(fatherName, motherName, gender) {
   ];
 
   const uniqueNames = Array.from(
-    new Set(base.map((name) => capitalize(name.replace(/[^a-z]/gi, ''))).filter((name) => name.length >= 4)),
+    new Set(
+      base
+        .map((name) => capitalize(name.replace(/[^a-z]/gi, "")))
+        .filter((name) => name.length >= 4),
+    ),
   ).slice(0, 10);
 
   return uniqueNames.map((name, index) => ({
@@ -86,29 +94,29 @@ function generateFallbackNames(fatherName, motherName, gender) {
 }
 
 async function generateName(req, res) {
-  let fatherName = '';
-  let motherName = '';
-  let gender = '';
+  let fatherName = "";
+  let motherName = "";
+  let gender = "";
 
   try {
     ({ fatherName, motherName, gender } = req.body || {});
 
     if (!fatherName || !motherName || !gender) {
       return res.status(400).json({
-        message: 'fatherName, motherName, and gender are required.',
+        message: "fatherName, motherName, and gender are required.",
       });
     }
 
     if (!allowedGenders.includes(gender)) {
       return res.status(400).json({
-        message: `gender must be one of: ${allowedGenders.join(', ')}`,
+        message: `gender must be one of: ${allowedGenders.join(", ")}`,
       });
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return res.status(500).json({
-        message: 'OPENAI_API_KEY is not configured on the backend.',
+        message: "OPENAI_API_KEY is not configured on the backend.",
       });
     }
 
@@ -119,14 +127,15 @@ async function generateName(req, res) {
     let completion;
     try {
       completion = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         messages: [
           {
-            role: 'system',
-            content: 'You generate culturally natural baby names and always return valid JSON only.',
+            role: "system",
+            content:
+              "You generate culturally natural baby names and always return valid JSON only.",
           },
           {
-            role: 'user',
+            role: "user",
             content: prompt,
           },
         ],
@@ -138,18 +147,20 @@ async function generateName(req, res) {
         return res.status(200).json(fallback);
       }
 
-      return res.status(502).json({ message: 'Failed to generate names from AI model.' });
+      return res
+        .status(502)
+        .json({ message: "Failed to generate names from AI model." });
     }
 
     const raw = completion.choices?.[0]?.message?.content;
     if (!raw) {
-      return res.status(502).json({ message: 'Empty response from AI model.' });
+      return res.status(502).json({ message: "Empty response from AI model." });
     }
 
     let parsed = extractJsonArray(raw);
 
     if (!Array.isArray(parsed)) {
-      return res.status(502).json({ message: 'Invalid AI response format.' });
+      return res.status(502).json({ message: "Invalid AI response format." });
     }
 
     const unique = new Map();
@@ -174,13 +185,17 @@ async function generateName(req, res) {
 
     return res.status(200).json(parsed);
   } catch (error) {
-    const fallback = generateFallbackNames(fatherName, motherName, gender || 'Unisex');
+    const fallback = generateFallbackNames(
+      fatherName,
+      motherName,
+      gender || "Unisex",
+    );
     if (fallback.length > 0) {
       return res.status(200).json(fallback);
     }
 
     return res.status(500).json({
-      message: 'Failed to generate AI baby names.',
+      message: "Failed to generate AI baby names.",
       error: error.message,
     });
   }

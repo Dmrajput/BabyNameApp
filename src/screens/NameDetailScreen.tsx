@@ -40,7 +40,7 @@ export const NameDetailScreen = ({ route }: Props) => {
 
     try {
       await Share.share({
-        message: `${babyName.name}: ${babyName.meaning} (${babyName.origin}, ${babyName.gender})`,
+        message: `${babyName.name}: ${babyName.meaning} (${babyName.origin}, ${babyName.gender}, Rating ${(babyName.rating ?? 0).toFixed(1)}/5)`,
       });
     } catch {
       Alert.alert('Unable to share right now.');
@@ -79,6 +79,11 @@ export const NameDetailScreen = ({ route }: Props) => {
         <View style={styles.detailRow}>
           <Text style={styles.label}>Gender</Text>
           <Text style={styles.value}>{babyName.gender}</Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Text style={styles.label}>Rating</Text>
+          <Text style={styles.value}>{(babyName.rating ?? 0).toFixed(1)} / 5</Text>
         </View>
 
         <View style={styles.buttonRow}>

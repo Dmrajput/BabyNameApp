@@ -39,6 +39,7 @@ export const NameCard = ({ item, isFavorite, onToggleFavorite, onPress }: NameCa
           <Text style={styles.meta}>
             {item.gender} • {item.origin}
           </Text>
+          <Text style={styles.rating}>Rating: {(item.rating ?? 0).toFixed(1)} / 5</Text>
         </View>
 
         <Pressable onPress={onToggleFavorite} hitSlop={12}>
@@ -85,5 +86,11 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 13,
     color: '#6B7280',
+  },
+  rating: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#B45309',
+    fontWeight: '700',
   },
 });

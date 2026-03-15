@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const babyNameSchema = new mongoose.Schema(
   {
@@ -21,7 +21,7 @@ const babyNameSchema = new mongoose.Schema(
     gender: {
       type: String,
       required: true,
-      enum: ['Boy', 'Girl'],
+      enum: ["Boy", "Girl"],
       trim: true,
     },
     category: {
@@ -30,10 +30,17 @@ const babyNameSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0,
+      index: true,
+    },
   },
   {
     timestamps: true,
   },
 );
 
-module.exports = mongoose.model('BabyName', babyNameSchema);
+module.exports = mongoose.model("BabyName", babyNameSchema);
