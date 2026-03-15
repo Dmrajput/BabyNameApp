@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const config = require('../config/env');
-const User = require('../models/User');
+const BbUser = require('../models/BbUser');
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,14 +34,14 @@ async function signup(req, res) {
       return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await BbUser.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({ message: 'An account with this email already exists.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    const user = await BbUser.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
@@ -66,7 +66,7 @@ async function login(req, res) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await BbUser.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
