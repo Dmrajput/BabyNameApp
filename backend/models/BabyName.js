@@ -37,6 +37,12 @@ const babyNameSchema = new mongoose.Schema(
       default: 0,
       index: true,
     },
+    favoriteCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      index: true,
+    },
   },
   {
     timestamps: true,

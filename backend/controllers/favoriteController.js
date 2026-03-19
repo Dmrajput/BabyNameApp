@@ -30,6 +30,7 @@ async function addFavorite(req, res) {
     }
 
     const favorite = await BbFavorite.create({ userId, nameId });
+    await BabyName.updateOne({ _id: nameId }, { $inc: { favoriteCount: 1 } });
 
     return res.status(201).json({
       message: "Added to favorites.",
@@ -51,7 +52,14 @@ async function removeFavorite(req, res) {
       return res.status(400).json({ message: "Invalid nameId." });
     }
 
-    await BbFavorite.findOneAndDelete({ userId, nameId });
+    const deleted = await BbFavorite.findOneAndDelete({ userId, nameId });
+
+    if (deleted) {
+      await BabyName.updateOne(
+        { _id: nameId, favoriteCount: { $gt: 0 } },
+        { $inc: { favoriteCount: -1 } },
+      );
+    }
 
     return res.status(200).json({
       message: "Removed from favorites.",
@@ -70,7 +78,7 @@ async function getFavorites(req, res) {
       .sort({ createdAt: -1 })
       .populate({
         path: "nameId",
-        select: "name meaning origin gender category rating",
+        select: "name meaning origin gender category rating favoriteCount",
       });
 
     const payload = favorites

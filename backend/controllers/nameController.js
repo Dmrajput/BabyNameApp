@@ -62,7 +62,9 @@ async function getAllNames(_req, res) {
     const shouldPaginate = _req.query.paginate === "true";
 
     if (!shouldPaginate) {
-      const names = await BabyName.find(filter).sort({ rating: -1, name: 1 });
+      const names = await BabyName.find(filter)
+        .select("name meaning category favoriteCount")
+        .sort({ favoriteCount: -1, name: 1 });
       return res.status(200).json(names);
     }
 

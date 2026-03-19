@@ -1,6 +1,4 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -11,16 +9,15 @@ import {
     View,
 } from "react-native";
 
+import { useAuth } from "../context/AuthContext";
+
 type StoredUser = {
   name?: string;
   email?: string;
 };
 
-const TOKEN_KEY = "userToken";
-const USER_KEY = "userData";
-
 export const ProfileScreen = () => {
-  const navigation = useNavigation<any>();
+  const { userData, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [user, setUser] = useState<StoredUser | null>(null);
@@ -28,20 +25,21 @@ export const ProfileScreen = () => {
   const loadUser = useCallback(async () => {
     try {
       setLoading(true);
-      const rawUser = await AsyncStorage.getItem(USER_KEY);
-
-      if (!rawUser) {
+      if (!userData) {
         setUser(null);
         return;
       }
 
-      setUser(JSON.parse(rawUser) as StoredUser);
+      setUser({
+        name: userData.name,
+        email: userData.email,
+      });
     } catch {
       setUser(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userData]);
 
   useEffect(() => {
     void loadUser();
@@ -54,12 +52,7 @@ export const ProfileScreen = () => {
 
     try {
       setIsLoggingOut(true);
-      await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      });
+      await logout();
     } catch {
       Alert.alert(
         "Logout failed",

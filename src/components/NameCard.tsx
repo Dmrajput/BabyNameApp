@@ -11,28 +11,18 @@ type NameCardProps = {
   onPress: () => void;
 };
 
-const getSafeRating = (item: BabyName): number => {
-  const raw =
-    (item as BabyName & { ratings?: unknown; Rating?: unknown }).rating ??
-    (item as BabyName & { ratings?: unknown; Rating?: unknown }).ratings ??
-    (item as BabyName & { ratings?: unknown; Rating?: unknown }).Rating;
+const getFavoriteCount = (item: BabyName): number => {
+  const value = item.favoriteCount;
 
-  if (typeof raw === "number" && Number.isFinite(raw)) {
-    return raw;
-  }
-
-  if (typeof raw === "string") {
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  if (raw && typeof raw === "object" && "$numberDecimal" in raw) {
-    const decimal = (raw as { $numberDecimal?: string }).$numberDecimal;
-    const parsed = Number(decimal);
-    return Number.isFinite(parsed) ? parsed : 0;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.max(0, Math.floor(value));
   }
 
   return 0;
+};
+
+const formatUsers = (count: number): string => {
+  return new Intl.NumberFormat("en-US").format(count);
 };
 
 export const NameCard = ({
@@ -43,7 +33,7 @@ export const NameCard = ({
 }: NameCardProps) => {
   const scale = useRef(new Animated.Value(1)).current;
   const heartScale = useRef(new Animated.Value(1)).current;
-  const safeRating = getSafeRating(item);
+  const favoriteCount = getFavoriteCount(item);
 
   const onPressIn = () => {
     Animated.timing(scale, {
@@ -84,10 +74,13 @@ export const NameCard = ({
         <View style={styles.left}>
           <Text style={styles.name}>{item.name}</Text>
           <Text style={styles.meaning}>{item.meaning}</Text>
-          <Text style={styles.meta}>
-            {item.gender} • {item.origin}
-          </Text>
-          <Text style={styles.rating}>Rating: {safeRating.toFixed(1)} / 5</Text>
+
+          <View style={styles.countRow}>
+            <MaterialCommunityIcons name="heart" size={15} color="#EF4444" />
+            <Text style={styles.countText}>
+              {formatUsers(favoriteCount)} users
+            </Text>
+          </View>
         </View>
 
         <Pressable onPress={onPressFavorite} hitSlop={12}>
@@ -137,10 +130,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6B7280",
   },
-  rating: {
-    marginTop: 4,
+  countRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  countText: {
     fontSize: 12,
-    color: "#B45309",
+    color: "#334155",
     fontWeight: "700",
   },
 });

@@ -102,10 +102,14 @@ function toNumber(value) {
 
 function normalizeName(item) {
   const numericRating = toNumber(item?.rating ?? item?.ratings ?? item?.Rating);
+  const numericFavoriteCount = toNumber(item?.favoriteCount);
 
   return {
     ...item,
     rating: Number.isFinite(numericRating) ? numericRating : 0,
+    favoriteCount: Number.isFinite(numericFavoriteCount)
+      ? Math.max(0, Math.floor(numericFavoriteCount))
+      : 0,
   };
 }
 

@@ -286,7 +286,9 @@ export const NameListScreen = ({ route, navigation }: Props) => {
           ) : null
         }
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No names match your filters.</Text>
+          !loading && !error ? (
+            <Text style={styles.emptyText}>No names match your filters.</Text>
+          ) : null
         }
         renderItem={({ item }) => (
           <NameCard

@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 
+import { useAuth } from "../context/AuthContext";
 import { AdminScreen } from "../screens/AdminScreen";
 import { FavoritesScreen } from "../screens/FavoritesScreen";
 import { GeneratorScreen } from "../screens/GeneratorScreen";
@@ -10,8 +11,13 @@ import { TabParamList } from "../types";
 import { HomeStackNavigator } from "./HomeStackNavigator";
 
 const Tab = createBottomTabNavigator<TabParamList>();
+const ADMIN_EMAIL = "divyarajsinh5216@gmail.com";
 
 export const BottomTabNavigator = () => {
+  const { userData } = useAuth();
+  const isAdmin =
+    (userData?.email ?? "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -96,11 +102,13 @@ export const BottomTabNavigator = () => {
         component={ProfileScreen}
         options={{ title: "Profile" }}
       />
-      <Tab.Screen
-        name="Admin"
-        component={AdminScreen}
-        options={{ title: "Admin" }}
-      />
+      {isAdmin ? (
+        <Tab.Screen
+          name="Admin"
+          component={AdminScreen}
+          options={{ title: "Admin" }}
+        />
+      ) : null}
     </Tab.Navigator>
   );
 };
