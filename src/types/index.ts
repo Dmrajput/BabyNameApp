@@ -10,6 +10,8 @@ export type BabyName = {
   gender: NameGender;
   category: string;
   rating?: number;
+  favoriteId?: string;
+  favoriteCreatedAt?: string;
 };
 
 export type GeneratedName = {
@@ -42,4 +44,5 @@ export type TabParamList = {
   Generator: undefined;
   Favorites: undefined;
   Profile: undefined;
+  Admin: undefined;
 };

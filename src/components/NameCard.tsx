@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useRef } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { BabyName } from '../types';
+import { BabyName } from "../types";
 
 type NameCardProps = {
   item: BabyName;
@@ -11,8 +11,39 @@ type NameCardProps = {
   onPress: () => void;
 };
 
-export const NameCard = ({ item, isFavorite, onToggleFavorite, onPress }: NameCardProps) => {
+const getSafeRating = (item: BabyName): number => {
+  const raw =
+    (item as BabyName & { ratings?: unknown; Rating?: unknown }).rating ??
+    (item as BabyName & { ratings?: unknown; Rating?: unknown }).ratings ??
+    (item as BabyName & { ratings?: unknown; Rating?: unknown }).Rating;
+
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === "string") {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  if (raw && typeof raw === "object" && "$numberDecimal" in raw) {
+    const decimal = (raw as { $numberDecimal?: string }).$numberDecimal;
+    const parsed = Number(decimal);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+export const NameCard = ({
+  item,
+  isFavorite,
+  onToggleFavorite,
+  onPress,
+}: NameCardProps) => {
   const scale = useRef(new Animated.Value(1)).current;
+  const heartScale = useRef(new Animated.Value(1)).current;
+  const safeRating = getSafeRating(item);
 
   const onPressIn = () => {
     Animated.timing(scale, {
@@ -30,6 +61,23 @@ export const NameCard = ({ item, isFavorite, onToggleFavorite, onPress }: NameCa
     }).start();
   };
 
+  const onPressFavorite = () => {
+    Animated.sequence([
+      Animated.timing(heartScale, {
+        toValue: 1.2,
+        duration: 90,
+        useNativeDriver: true,
+      }),
+      Animated.timing(heartScale, {
+        toValue: 1,
+        duration: 90,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    onToggleFavorite();
+  };
+
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
@@ -39,15 +87,17 @@ export const NameCard = ({ item, isFavorite, onToggleFavorite, onPress }: NameCa
           <Text style={styles.meta}>
             {item.gender} • {item.origin}
           </Text>
-          <Text style={styles.rating}>Rating: {(item.rating ?? 0).toFixed(1)} / 5</Text>
+          <Text style={styles.rating}>Rating: {safeRating.toFixed(1)} / 5</Text>
         </View>
 
-        <Pressable onPress={onToggleFavorite} hitSlop={12}>
-          <MaterialCommunityIcons
-            name={isFavorite ? 'heart' : 'heart-outline'}
-            size={24}
-            color={isFavorite ? '#EF4444' : '#64748B'}
-          />
+        <Pressable onPress={onPressFavorite} hitSlop={12}>
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <MaterialCommunityIcons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={24}
+              color={isFavorite ? "#EF4444" : "#64748B"}
+            />
+          </Animated.View>
         </Pressable>
       </Animated.View>
     </Pressable>
@@ -56,13 +106,13 @@ export const NameCard = ({ item, isFavorite, onToggleFavorite, onPress }: NameCa
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    shadowColor: '#000000',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    shadowColor: "#000000",
     shadowOpacity: 0.07,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -74,23 +124,23 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 24,
-    color: '#1F2937',
-    fontWeight: '800',
+    color: "#1F2937",
+    fontWeight: "800",
     marginBottom: 4,
   },
   meaning: {
     fontSize: 15,
-    color: '#4B5563',
+    color: "#4B5563",
     marginBottom: 4,
   },
   meta: {
     fontSize: 13,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   rating: {
     marginTop: 4,
     fontSize: 12,
-    color: '#B45309',
-    fontWeight: '700',
+    color: "#B45309",
+    fontWeight: "700",
   },
 });

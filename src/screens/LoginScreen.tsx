@@ -1,16 +1,16 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { useAuth } from "@/src/context/AuthContext";
@@ -41,7 +41,6 @@ export default function LoginScreen() {
       setIsSubmitting(true);
       setError("");
       await login({ email: email.trim().toLowerCase(), password });
-      navigation.reset({ index: 0, routes: [{ name: "MainTabs" }] });
     } catch (err) {
       setError(
         err instanceof Error

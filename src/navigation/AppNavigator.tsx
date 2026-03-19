@@ -1,7 +1,9 @@
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
+import { useAuth } from "../context/AuthContext";
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
 import { BottomTabNavigator } from "./BottomTabNavigator";
@@ -27,18 +29,42 @@ const appTheme = {
 };
 
 export const AppNavigator = () => {
+  const { userToken, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#E86A6A" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer theme={appTheme}>
       <RootStack.Navigator
-        initialRouteName="MainTabs"
+        initialRouteName={userToken ? "MainTabs" : "Login"}
         screenOptions={{
           headerShown: false,
         }}
       >
-        <RootStack.Screen name="MainTabs" component={BottomTabNavigator} />
-        <RootStack.Screen name="Login" component={LoginScreen} />
-        <RootStack.Screen name="Signup" component={SignupScreen} />
+        {userToken ? (
+          <RootStack.Screen name="MainTabs" component={BottomTabNavigator} />
+        ) : (
+          <>
+            <RootStack.Screen name="Login" component={LoginScreen} />
+            <RootStack.Screen name="Signup" component={SignupScreen} />
+          </>
+        )}
       </RootStack.Navigator>
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFF9F5",
+  },
+});

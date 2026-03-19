@@ -21,7 +21,7 @@ const babyNameSchema = new mongoose.Schema(
     gender: {
       type: String,
       required: true,
-      enum: ["Boy", "Girl"],
+      enum: ["Boy", "Girl", "Unisex"],
       trim: true,
     },
     category: {

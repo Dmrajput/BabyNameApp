@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 
+import { AdminScreen } from "../screens/AdminScreen";
 import { FavoritesScreen } from "../screens/FavoritesScreen";
 import { GeneratorScreen } from "../screens/GeneratorScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
@@ -55,6 +56,16 @@ export const BottomTabNavigator = () => {
             );
           }
 
+          if (route.name === "Admin") {
+            return (
+              <MaterialCommunityIcons
+                name="shield-crown"
+                size={size}
+                color={color}
+              />
+            );
+          }
+
           return (
             <MaterialCommunityIcons
               name="heart-multiple"
@@ -84,6 +95,11 @@ export const BottomTabNavigator = () => {
         name="Profile"
         component={ProfileScreen}
         options={{ title: "Profile" }}
+      />
+      <Tab.Screen
+        name="Admin"
+        component={AdminScreen}
+        options={{ title: "Admin" }}
       />
     </Tab.Navigator>
   );
