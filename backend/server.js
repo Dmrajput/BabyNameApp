@@ -7,6 +7,10 @@ const authRoutes = require("./routes/authRoutes");
 const nameRoutes = require("./routes/nameRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const countryRoutes = require("./routes/countryRoutes");
+const { requireAdminEmail } = require("./middleware/adminAuth");
+const { uploadNames } = require("./controllers/nameController");
 
 const app = express();
 const port = config.port;
@@ -20,7 +24,12 @@ app.get("/", (_req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/api/names", nameRoutes);
+app.post("/api/upload-names", requireAdminEmail, uploadNames);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/countries", countryRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/countries", countryRoutes);
 app.use("/api", aiRoutes);
 
 async function startServer() {

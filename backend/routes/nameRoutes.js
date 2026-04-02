@@ -8,12 +8,14 @@ const {
   searchNames,
   updateName,
   getNameById,
+  uploadNames,
 } = require("../controllers/nameController");
 const { requireAdminEmail } = require("../middleware/adminAuth");
 
 const router = express.Router();
 
 router.get("/", getAllNames);
+router.post("/upload-names", requireAdminEmail, uploadNames);
 router.post("/", requireAdminEmail, createName);
 router.get("/category/:category", getNamesByCategory);
 router.get("/search", searchNames);

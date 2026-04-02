@@ -30,6 +30,20 @@ const babyNameSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    country: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "India",
+      index: true,
+    },
+    state: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "Unknown",
+      index: true,
+    },
     rating: {
       type: Number,
       min: 0,
@@ -48,5 +62,7 @@ const babyNameSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+babyNameSchema.index({ name: 1, category: 1 });
 
 module.exports = mongoose.model("BabyName", babyNameSchema);

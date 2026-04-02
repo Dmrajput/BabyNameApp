@@ -121,16 +121,164 @@ function normalizeNames(items) {
   return items.map(normalizeName);
 }
 
-export const getNames = async () => normalizeNames(await request("/api/names"));
+function normalizeCategories(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
 
-export const getNamesByCategory = async (category) =>
-  normalizeNames(
-    await request(`/api/names/category/${encodeURIComponent(category)}`),
+  return items
+    .filter((item) => item && item.id && item.title)
+    .map((item) => ({
+      id: String(item.id),
+      title: String(item.title),
+      icon: item.icon ? String(item.icon) : "shape",
+      color: item.color ? String(item.color) : "#F1F5F9",
+    }));
+}
+
+function normalizeCountries(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .filter((item) => item && item.code && item.label)
+    .map((item) => ({
+      code: String(item.code),
+      label: String(item.label),
+      flag: item.flag ? String(item.flag) : "",
+    }));
+}
+
+export const getCategories = async (country) => {
+  const params = new URLSearchParams();
+
+  if (country) {
+    params.append("country", country);
+  }
+
+  const query = params.toString();
+  const path = query ? `/api/categories?${query}` : "/api/categories";
+
+  return normalizeCategories(await request(path));
+};
+
+export const getCountries = async () =>
+  normalizeCountries(await request("/api/countries"));
+
+export const getStatesByCountry = async (country = "India") => {
+  const states = await request(
+    `/api/countries/${encodeURIComponent(country)}/states`,
   );
 
-export const searchNames = async (query) =>
+  if (!Array.isArray(states)) {
+    return [];
+  }
+
+  return states
+    .map((item) => item?.toString().trim())
+    .filter(Boolean)
+    .filter((item, index, arr) => arr.indexOf(item) === index)
+    .sort((a, b) => a.localeCompare(b));
+};
+
+export const getNames = async (country = "India") =>
   normalizeNames(
-    await request(`/api/names/search?q=${encodeURIComponent(query)}`),
+    await request(`/api/names?country=${encodeURIComponent(country)}`),
+  );
+
+export const getNamesByCountry = async (country) =>
+  normalizeNames(
+    await request(`/api/names?country=${encodeURIComponent(country)}`),
+  );
+
+export const getNamesByCategory = async (
+  category,
+  country = "India",
+  state = "All",
+) => {
+  const params = new URLSearchParams();
+  params.append("country", country);
+
+  if (state && state !== "All") {
+    params.append("state", state);
+  }
+
+  return normalizeNames(
+    await request(
+      `/api/names/category/${encodeURIComponent(category)}?${params.toString()}`,
+    ),
+  );
+};
+
+export const getNamesPage = async ({
+  page = 1,
+  limit = 100,
+  search = "",
+  category = "All",
+  country = "India",
+  state = "All",
+  gender = "All",
+  letter = "All",
+} = {}) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  if (search.trim()) {
+    params.append("search", search.trim());
+  }
+
+  if (category && category !== "All") {
+    params.append("category", category);
+  }
+
+  if (country) {
+    params.append("country", country);
+  }
+
+  if (state && state !== "All") {
+    params.append("state", state);
+  }
+
+  if (gender && gender !== "All") {
+    params.append("gender", gender);
+  }
+
+  if (letter && letter !== "All") {
+    params.append("letter", letter);
+  }
+
+  const response = await request(`/api/names?${params.toString()}`);
+  const rawItems = Array.isArray(response?.data)
+    ? response.data
+    : Array.isArray(response?.items)
+      ? response.items
+      : [];
+
+  const totalPages = Number.isFinite(response?.totalPages)
+    ? Math.max(1, Number(response.totalPages))
+    : 1;
+  const currentPage = Number.isFinite(response?.currentPage)
+    ? Math.max(1, Number(response.currentPage))
+    : Number.isFinite(response?.page)
+      ? Math.max(1, Number(response.page))
+      : page;
+
+  return {
+    data: normalizeNames(rawItems),
+    currentPage,
+    totalPages,
+    total: Number.isFinite(response?.total) ? Number(response.total) : 0,
+  };
+};
+
+export const searchNames = async (query, country = "India") =>
+  normalizeNames(
+    await request(
+      `/api/names/search?q=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`,
+    ),
   );
 
 export const getNameById = async (id) =>
@@ -209,6 +357,13 @@ export const removeFavorite = async ({ token, nameId }) =>
   authorizedRequest(`/api/favorites/${nameId}`, {
     method: "DELETE",
     token,
+  });
+
+export const uploadNamesJson = async ({ token, names }) =>
+  authorizedRequest("/api/upload-names", {
+    method: "POST",
+    token,
+    body: { names },
   });
 
 export const generateBabyNames = async (fatherName, motherName, gender) =>

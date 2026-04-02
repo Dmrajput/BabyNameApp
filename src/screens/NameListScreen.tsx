@@ -1,29 +1,34 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import {
-    AdEventType,
-    InterstitialAd,
-    TestIds,
+  AdEventType,
+  InterstitialAd,
+  TestIds,
 } from "react-native-google-mobile-ads";
 
 import { NameCard } from "../components/NameCard";
 import { SearchBar } from "../components/SearchBar";
+import { useCountry } from "../context/CountryContext";
 import { useFavorites } from "../context/FavoritesContext";
-import { getNamesByCategory } from "../services/api";
+import { useStateFilter } from "../context/StateContext";
+import { getNamesPage } from "../services/api";
 import { BabyName, GenderFilter, HomeStackParamList } from "../types";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "NameList">;
@@ -32,6 +37,7 @@ const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const AD_TRIGGER_EVERY_OPENS = 10;
 const AD_SHOW_DELAY_MS = 300;
 const AD_RETRY_DELAY_MS = 15_000;
+const PAGE_SIZE = 100;
 
 const INTERSTITIAL_TEST_OR_PROD_ID = __DEV__
   ? TestIds.INTERSTITIAL
@@ -45,16 +51,25 @@ const getRandomCooldownMs = () => {
 };
 
 export const NameListScreen = ({ route, navigation }: Props) => {
-  const { category, initialQuery } = route.params;
+  const { category, title, initialQuery } = route.params;
+  const { selectedCountry, isCountryLoading } = useCountry();
+  const { selectedState, states, setSelectedState, isStateLoading } =
+    useStateFilter();
   const [query, setQuery] = useState(initialQuery ?? "");
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery ?? "");
   const [gender, setGender] = useState<GenderFilter>("All");
   const [selectedLetter, setSelectedLetter] = useState<string>("All");
-  const [allNames, setAllNames] = useState<BabyName[]>([]);
+  const [showStateModal, setShowStateModal] = useState(false);
+  const [names, setNames] = useState<BabyName[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string>("");
   const [isInterstitialLoaded, setIsInterstitialLoaded] = useState(false);
   const [adError, setAdError] = useState<string>("");
   const { isFavorite, toggleFavorite } = useFavorites();
+  const loadingRef = useRef(false);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
 
   // Create one interstitial instance for this screen lifecycle.
   const interstitialRef = useRef(
@@ -183,56 +198,175 @@ export const NameListScreen = ({ route, navigation }: Props) => {
   }, []);
 
   useEffect(() => {
-    const loadNames = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await getNamesByCategory(category);
-        setAllNames(data);
-      } catch (_error) {
-        setError("Unable to load names. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+    const timeoutId = setTimeout(() => {
+      setDebouncedQuery(query.trim());
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
     };
+  }, [query]);
 
-    void loadNames();
-  }, [category]);
+  const fetchNames = useCallback(
+    async (pageNumber = 1, reset = false) => {
+      if (
+        loadingRef.current ||
+        (!reset && pageNumber > 1 && !hasMoreRef.current)
+      ) {
+        return;
+      }
 
-  const names = useMemo(() => {
-    return allNames.filter((item) => {
-      const matchesSearch =
-        !query.trim() ||
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        item.meaning.toLowerCase().includes(query.toLowerCase());
-      const matchesGender = gender === "All" || item.gender === gender;
-      const matchesLetter =
-        selectedLetter === "All" || item.name.startsWith(selectedLetter);
+      loadingRef.current = true;
+      setLoading(pageNumber === 1);
+      setIsLoadingMore(pageNumber > 1);
 
-      return matchesSearch && matchesGender && matchesLetter;
-    });
-  }, [allNames, gender, query, selectedLetter]);
+      try {
+        if (pageNumber === 1) {
+          setError("");
+        }
 
-  return (
-    <View style={styles.screen}>
+        const response = await getNamesPage({
+          page: pageNumber,
+          limit: PAGE_SIZE,
+          search: debouncedQuery,
+          category,
+          country: selectedCountry,
+          state: selectedState,
+          gender,
+          letter: selectedLetter,
+        });
+
+        setNames((previous) =>
+          pageNumber === 1 ? response.data : [...previous, ...response.data],
+        );
+        pageRef.current = response.currentPage;
+
+        // Stop pagination when server returns an empty page to avoid
+        // repeated onEndReached fetch loops in empty-filter states.
+        const nextHasMore =
+          response.data.length > 0 &&
+          response.currentPage < response.totalPages;
+        hasMoreRef.current = nextHasMore;
+      } catch {
+        setError("Unable to load names. Please try again.");
+        if (pageNumber === 1) {
+          setNames([]);
+        }
+      } finally {
+        loadingRef.current = false;
+        setLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [
+      debouncedQuery,
+      category,
+      selectedCountry,
+      selectedState,
+      gender,
+      selectedLetter,
+    ],
+  );
+
+  useEffect(() => {
+    if (isCountryLoading || isStateLoading) {
+      return;
+    }
+
+    pageRef.current = 1;
+    hasMoreRef.current = true;
+    setNames([]);
+    void fetchNames(1, true);
+  }, [
+    fetchNames,
+    category,
+    debouncedQuery,
+    selectedCountry,
+    selectedState,
+    gender,
+    selectedLetter,
+    isCountryLoading,
+    isStateLoading,
+  ]);
+
+  const stateOptions = useMemo(() => ["All", ...states], [states]);
+
+  const handleLoadMore = useCallback(() => {
+    if (loadingRef.current || !hasMoreRef.current) {
+      return;
+    }
+
+    void fetchNames(pageRef.current + 1);
+  }, [fetchNames]);
+
+  const renderNameCard = useCallback(
+    ({ item }: { item: BabyName }) => (
+      <NameCard
+        compact
+        item={item}
+        isFavorite={isFavorite(item._id)}
+        onToggleFavorite={() => toggleFavorite(item)}
+        onPress={() => {
+          openCountRef.current += 1;
+          navigation.navigate("NameDetail", { nameId: item._id });
+
+          if (openCountRef.current % AD_TRIGGER_EVERY_OPENS === 0) {
+            if (showTimeoutRef.current) {
+              clearTimeout(showTimeoutRef.current);
+            }
+
+            showTimeoutRef.current = setTimeout(() => {
+              tryShowInterstitial();
+            }, AD_SHOW_DELAY_MS);
+          }
+        }}
+      />
+    ),
+    [isFavorite, navigation, toggleFavorite, tryShowInterstitial],
+  );
+
+  const stickyHeader = (
+    <View style={styles.stickyHeaderWrap}>
       <SearchBar
         value={query}
         onChangeText={setQuery}
         placeholder="Search name or meaning"
+        compact
       />
 
-      <View style={styles.genderRow}>
-        <View style={styles.genderFiltersWrap}>
+      <View style={styles.filterRow}>
+        <Pressable
+          style={styles.stateButtonInline}
+          onPress={() => setShowStateModal(true)}
+          disabled={isStateLoading}
+        >
+          <Text style={styles.stateButtonTextInline} numberOfLines={1}>
+            {selectedState}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-down"
+            size={16}
+            color="#475569"
+          />
+        </Pressable>
+
+        <View style={styles.genderFiltersWrapCompact}>
           {(["All", "Boy", "Girl"] as GenderFilter[]).map((item) => {
             const active = gender === item;
             return (
               <Pressable
                 key={item}
                 onPress={() => setGender(item)}
-                style={[styles.filterChip, active && styles.activeFilterChip]}
+                style={[
+                  styles.filterChipCompact,
+                  active && styles.activeFilterChipCompact,
+                ]}
               >
                 <Text
-                  style={[styles.filterText, active && styles.activeFilterText]}
+                  style={[
+                    styles.filterTextCompact,
+                    active && styles.activeFilterText,
+                  ]}
                 >
                   {item}
                 </Text>
@@ -241,79 +375,129 @@ export const NameListScreen = ({ route, navigation }: Props) => {
           })}
         </View>
 
-        <View style={styles.inlineCountBadge}>
-          <Text style={styles.inlineCountText}>
+        <View style={styles.inlineCountBadgeCompact}>
+          <Text style={styles.inlineCountTextCompact}>
             {loading ? "..." : names.length}
           </Text>
         </View>
       </View>
 
-      <FlatList
+      <ScrollView
         horizontal
-        data={["All", ...alphabet]}
-        keyExtractor={(item) => item}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.alphabetRow}
-        renderItem={({ item }) => {
+        keyboardShouldPersistTaps="always"
+        contentContainerStyle={styles.alphabetRowCompact}
+      >
+        {["All", ...alphabet].map((item) => {
           const active = selectedLetter === item;
           return (
             <Pressable
+              key={item}
               onPress={() => setSelectedLetter(item)}
-              style={[styles.alphaChip, active && styles.activeAlphaChip]}
+              style={[
+                styles.alphaChipCompact,
+                active && styles.activeAlphaChipCompact,
+              ]}
             >
               <Text
-                style={[styles.alphaText, active && styles.activeAlphaText]}
+                style={[
+                  styles.alphaTextCompact,
+                  active && styles.activeAlphaTextCompact,
+                ]}
               >
                 {item}
               </Text>
             </Pressable>
           );
-        }}
-      />
+        })}
+      </ScrollView>
+
+      {loading ? (
+        <ActivityIndicator color="#E86A6A" style={styles.loader} />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : __DEV__ && adError ? (
+        <Text style={styles.adDebugText}>Ad: {adError}</Text>
+      ) : null}
+    </View>
+  );
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.screenHeader}>
+        <Text style={styles.screenTitle}>{title}</Text>
+      </View>
+
+      {stickyHeader}
 
       <FlatList
         data={names}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          loading ? (
-            <ActivityIndicator color="#E86A6A" style={styles.loader} />
-          ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : __DEV__ && adError ? (
-            <Text style={styles.adDebugText}>Ad: {adError}</Text>
-          ) : null
-        }
+        keyboardShouldPersistTaps="always"
+        initialNumToRender={16}
+        maxToRenderPerBatch={18}
+        windowSize={9}
+        updateCellsBatchingPeriod={40}
+        removeClippedSubviews={false}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
         ListEmptyComponent={
           !loading && !error ? (
             <Text style={styles.emptyText}>No names match your filters.</Text>
           ) : null
         }
-        renderItem={({ item }) => (
-          <NameCard
-            item={item}
-            isFavorite={isFavorite(item._id)}
-            onToggleFavorite={() => toggleFavorite(item)}
-            onPress={() => {
-              // Natural action trigger: every 10 name opens.
-              openCountRef.current += 1;
-              navigation.navigate("NameDetail", { nameId: item._id });
-
-              if (openCountRef.current % AD_TRIGGER_EVERY_OPENS === 0) {
-                // Slight delay keeps navigation feeling responsive.
-                if (showTimeoutRef.current) {
-                  clearTimeout(showTimeoutRef.current);
-                }
-
-                showTimeoutRef.current = setTimeout(() => {
-                  tryShowInterstitial();
-                }, AD_SHOW_DELAY_MS);
-              }
-            }}
-          />
-        )}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <ActivityIndicator color="#E86A6A" style={styles.loader} />
+          ) : null
+        }
+        renderItem={renderNameCard}
       />
+
+      <Modal
+        visible={showStateModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowStateModal(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setShowStateModal(false)}
+        >
+          <View style={styles.modalCard}>
+            <ScrollView style={styles.stateOptionsScroll}>
+              {stateOptions.map((item) => {
+                const active = item === selectedState;
+
+                return (
+                  <Pressable
+                    key={item}
+                    style={[
+                      styles.stateOption,
+                      active && styles.stateOptionActive,
+                    ]}
+                    onPress={() => {
+                      void setSelectedState(item);
+                      setShowStateModal(false);
+                    }}
+                  >
+                    <Text style={styles.stateOptionText}>{item}</Text>
+                    {active ? (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={18}
+                        color="#0F766E"
+                      />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -322,81 +506,116 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#FFF9F5",
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 10,
+    paddingTop: 8,
   },
-  genderRow: {
+  screenHeader: {
+    paddingHorizontal: 4,
+    paddingBottom: 4,
+  },
+  screenTitle: {
+    fontSize: 21,
+    color: "#1F2937",
+    fontWeight: "800",
+  },
+  stickyHeaderWrap: {
+    backgroundColor: "#FFF9F5",
+    paddingBottom: 4,
+  },
+  filterRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  genderFiltersWrap: {
+  stateButtonInline: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  filterChip: {
     backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    marginRight: 8,
-  },
-  activeFilterChip: {
-    backgroundColor: "#FBCFE8",
-  },
-  filterText: {
-    fontSize: 14,
-    color: "#475569",
-    fontWeight: "600",
-  },
-  activeFilterText: {
-    color: "#9D174D",
-  },
-  alphabetRow: {
-    paddingBottom: 12,
-  },
-  alphaChip: {
-    backgroundColor: "#FFFFFF",
-    width: 34,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#F1E4DA",
+    paddingHorizontal: 10,
     height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
+    minWidth: 90,
     marginRight: 6,
   },
-  activeAlphaChip: {
-    backgroundColor: "#BFDBFE",
-  },
-  alphaText: {
+  stateButtonTextInline: {
     color: "#334155",
-    fontWeight: "600",
     fontSize: 12,
+    fontWeight: "700",
+    maxWidth: 76,
+    marginRight: 2,
   },
-  activeAlphaText: {
-    color: "#1D4ED8",
+  genderFiltersWrapCompact: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
-  inlineCountBadge: {
-    minWidth: 56,
+  filterChipCompact: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginRight: 5,
+    minWidth: 42,
+    alignItems: "center",
+  },
+  activeFilterChipCompact: {
+    backgroundColor: "#FBCFE8",
+  },
+  filterTextCompact: {
+    fontSize: 12,
+    color: "#475569",
+    fontWeight: "700",
+  },
+  inlineCountBadgeCompact: {
+    minWidth: 48,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: "#F4E7DF",
+    marginLeft: 6,
   },
-  inlineCountText: {
-    fontSize: 16,
+  inlineCountTextCompact: {
+    fontSize: 13,
     color: "#1F2937",
     fontWeight: "800",
   },
+  alphabetRowCompact: {
+    paddingBottom: 6,
+  },
+  alphaChipCompact: {
+    backgroundColor: "#FFFFFF",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 5,
+  },
+  activeAlphaChipCompact: {
+    backgroundColor: "#BFDBFE",
+  },
+  alphaTextCompact: {
+    color: "#334155",
+    fontWeight: "600",
+    fontSize: 11,
+  },
+  activeAlphaTextCompact: {
+    color: "#1D4ED8",
+  },
+  activeFilterText: {
+    color: "#9D174D",
+  },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 12,
   },
   loader: {
-    marginVertical: 10,
+    marginVertical: 6,
   },
   errorText: {
     color: "#B91C1C",
@@ -411,7 +630,39 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     color: "#64748B",
-    marginTop: 30,
-    fontSize: 15,
+    marginTop: 16,
+    fontSize: 13,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.25)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    maxHeight: "70%",
+  },
+  stateOptionsScroll: {
+    maxHeight: 300,
+  },
+  stateOption: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+  },
+  stateOptionActive: {
+    backgroundColor: "#F0FDFA",
+  },
+  stateOptionText: {
+    color: "#1F2937",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

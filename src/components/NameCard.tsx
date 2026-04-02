@@ -9,6 +9,7 @@ type NameCardProps = {
   isFavorite: boolean;
   onToggleFavorite: () => void;
   onPress: () => void;
+  compact?: boolean;
 };
 
 const getFavoriteCount = (item: BabyName): number => {
@@ -25,15 +26,46 @@ const formatUsers = (count: number): string => {
   return new Intl.NumberFormat("en-US").format(count);
 };
 
+const formatGender = (value: BabyName["gender"]): string => {
+  if (value === "Boy" || value === "Male") {
+    return "Male";
+  }
+
+  if (value === "Girl" || value === "Female") {
+    return "Female";
+  }
+
+  return "Unisex";
+};
+
+const getOriginLabel = (item: BabyName): string => {
+  const origin = item.origin?.toString().trim();
+  const state = item.state?.toString().trim();
+
+  return origin || state || "Unknown";
+};
+
+const getRatingValue = (item: BabyName): number => {
+  if (typeof item.rating === "number" && Number.isFinite(item.rating)) {
+    return Math.max(0, Math.min(5, item.rating));
+  }
+
+  return 0;
+};
+
 export const NameCard = ({
   item,
   isFavorite,
   onToggleFavorite,
   onPress,
+  compact = false,
 }: NameCardProps) => {
   const scale = useRef(new Animated.Value(1)).current;
   const heartScale = useRef(new Animated.Value(1)).current;
   const favoriteCount = getFavoriteCount(item);
+  const genderLabel = formatGender(item.gender);
+  const originLabel = getOriginLabel(item);
+  const ratingValue = getRatingValue(item);
 
   const onPressIn = () => {
     Animated.timing(scale, {
@@ -70,14 +102,45 @@ export const NameCard = ({
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
-      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+      <Animated.View
+        style={[
+          styles.card,
+          compact && styles.cardCompact,
+          { transform: [{ scale }] },
+        ]}
+      >
         <View style={styles.left}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.meaning}>{item.meaning}</Text>
+          <Text style={[styles.name, compact && styles.nameCompact]}>
+            {item.name}
+          </Text>
+          <Text
+            style={[styles.meaning, compact && styles.meaningCompact]}
+            numberOfLines={2}
+          >
+            {item.meaning}
+          </Text>
 
-          <View style={styles.countRow}>
-            <MaterialCommunityIcons name="heart" size={15} color="#EF4444" />
-            <Text style={styles.countText}>
+          <Text style={[styles.meta, compact && styles.metaCompact]}>
+            {genderLabel} | {originLabel}
+          </Text>
+
+          <View style={[styles.statsRow, compact && styles.statsRowCompact]}>
+            <Text
+              style={[styles.ratingText, compact && styles.ratingTextCompact]}
+            >
+              Rating {ratingValue.toFixed(1)} / 5
+            </Text>
+            <MaterialCommunityIcons
+              name="heart"
+              size={compact ? 13 : 15}
+              color="#EF4444"
+            />
+            <Text
+              style={[
+                styles.favoriteText,
+                compact && styles.favoriteTextCompact,
+              ]}
+            >
               {formatUsers(favoriteCount)} users
             </Text>
           </View>
@@ -87,7 +150,7 @@ export const NameCard = ({
           <Animated.View style={{ transform: [{ scale: heartScale }] }}>
             <MaterialCommunityIcons
               name={isFavorite ? "heart" : "heart-outline"}
-              size={24}
+              size={compact ? 21 : 24}
               color={isFavorite ? "#EF4444" : "#64748B"}
             />
           </Animated.View>
@@ -111,6 +174,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
+  cardCompact: {
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 6,
+  },
   left: {
     flex: 1,
     marginRight: 12,
@@ -121,24 +189,53 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 4,
   },
+  nameCompact: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
   meaning: {
     fontSize: 15,
-    color: "#4B5563",
+    color: "#666666",
     marginBottom: 4,
   },
-  meta: {
+  meaningCompact: {
     fontSize: 13,
-    color: "#6B7280",
+    color: "#666666",
+    marginBottom: 2,
+    lineHeight: 17,
   },
-  countRow: {
+  meta: {
+    fontSize: 12,
+    color: "#888888",
+  },
+  metaCompact: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  statsRow: {
     marginTop: 8,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-  countText: {
+  statsRowCompact: {
+    marginTop: 4,
+    gap: 4,
+  },
+  ratingText: {
     fontSize: 12,
-    color: "#334155",
+    color: "#F59E0B",
     fontWeight: "700",
+  },
+  ratingTextCompact: {
+    fontSize: 12,
+  },
+  favoriteText: {
+    fontSize: 12,
+    color: "#EF4444",
+    fontWeight: "700",
+  },
+  favoriteTextCompact: {
+    fontSize: 12,
   },
 });

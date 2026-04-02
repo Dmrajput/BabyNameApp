@@ -2,13 +2,22 @@ const BabyName = require("../models/BabyName");
 
 const allowedGenders = ["Boy", "Girl", "Unisex"];
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function buildNamePayload(body) {
+  const rawCountry = body.country?.toString().trim();
+  const rawState = body.state?.toString().trim();
+
   return {
     name: body.name?.toString().trim(),
     meaning: body.meaning?.toString().trim(),
     origin: body.origin?.toString().trim(),
     gender: body.gender?.toString().trim(),
     category: body.category?.toString().trim(),
+    country: rawCountry || "India",
+    state: rawState || "Unknown",
     rating: Number(body.rating),
   };
 }
@@ -19,9 +28,11 @@ function validatePayload(payload) {
     !payload.meaning ||
     !payload.origin ||
     !payload.gender ||
-    !payload.category
+    !payload.category ||
+    !payload.country ||
+    !payload.state
   ) {
-    return "Name, meaning, origin, gender, and category are required.";
+    return "Name, meaning, origin, gender, category, country, and state are required.";
   }
 
   if (!allowedGenders.includes(payload.gender)) {
@@ -39,27 +50,93 @@ function validatePayload(payload) {
   return null;
 }
 
-function buildListQuery(query) {
-  const search = query.search?.toString().trim();
-  const category = query.category?.toString().trim();
+function normalizeUploadRecord(record) {
+  const raw = record && typeof record === "object" ? record : {};
 
-  const filter = {};
+  return {
+    name: raw.name?.toString().trim(),
+    meaning: raw.meaning?.toString().trim(),
+    origin: raw.origin?.toString().trim(),
+    gender: raw.gender?.toString().trim(),
+    category: raw.category?.toString().trim(),
+    country: raw.country?.toString().trim() || "India",
+    state: raw.state?.toString().trim() || "Unknown",
+    rating: Number(raw.rating),
+  };
+}
+
+function buildListQuery(query, options = {}) {
+  const applyCountryFilter = options.applyCountryFilter ?? true;
+  const search = query.search?.toString().trim();
+  const gender = query.gender?.toString().trim();
+  const letter = query.letter?.toString().trim();
+  const category = query.category?.toString().trim();
+  const country = query.country?.toString().trim() || "India";
+  const state = query.state?.toString().trim();
+
+  const andFilters = [];
 
   if (search) {
-    filter.name = { $regex: search, $options: "i" };
+    andFilters.push({
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { meaning: { $regex: search, $options: "i" } },
+      ],
+    });
+  }
+
+  if (gender && gender !== "All" && allowedGenders.includes(gender)) {
+    andFilters.push({ gender });
+  }
+
+  if (letter && letter !== "All") {
+    andFilters.push({
+      name: { $regex: `^${escapeRegex(letter)}`, $options: "i" },
+    });
   }
 
   if (category && category !== "All") {
-    filter.category = new RegExp(`^${category}$`, "i");
+    andFilters.push({
+      category: new RegExp(`^${escapeRegex(category)}$`, "i"),
+    });
   }
 
-  return filter;
+  if (applyCountryFilter) {
+    if (country === "India") {
+      // Backward compatibility for legacy records that do not yet have country.
+      andFilters.push({
+        $or: [{ country: /^India$/i }, { country: { $exists: false } }],
+      });
+    } else {
+      andFilters.push({
+        country: new RegExp(`^${escapeRegex(country)}$`, "i"),
+      });
+    }
+  }
+
+  if (state && state !== "All") {
+    andFilters.push({ state: new RegExp(`^${escapeRegex(state)}$`, "i") });
+  }
+
+  if (andFilters.length === 0) {
+    return {};
+  }
+
+  if (andFilters.length === 1) {
+    return andFilters[0];
+  }
+
+  return { $and: andFilters };
 }
 
 async function getAllNames(_req, res) {
   try {
-    const filter = buildListQuery(_req.query);
-    const shouldPaginate = _req.query.paginate === "true";
+    const hasPageParams =
+      _req.query.page !== undefined || _req.query.limit !== undefined;
+    const shouldPaginate = _req.query.paginate === "true" || hasPageParams;
+    const filter = buildListQuery(_req.query, {
+      applyCountryFilter: !shouldPaginate || Boolean(_req.query.country),
+    });
 
     if (!shouldPaginate) {
       const names = await BabyName.find(filter)
@@ -70,8 +147,8 @@ async function getAllNames(_req, res) {
 
     const page = Math.max(1, Number.parseInt(_req.query.page ?? "1", 10) || 1);
     const limit = Math.min(
-      50,
-      Math.max(1, Number.parseInt(_req.query.limit ?? "10", 10) || 10),
+      100,
+      Math.max(1, Number.parseInt(_req.query.limit ?? "100", 10) || 100),
     );
     const skip = (page - 1) * limit;
 
@@ -83,12 +160,17 @@ async function getAllNames(_req, res) {
       BabyName.countDocuments(filter),
     ]);
 
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
     return res.status(200).json({
+      data: items,
+      currentPage: page,
+      totalPages,
+      total,
+      // Backward-compatible fields for existing admin screens.
       items,
       page,
       limit,
-      total,
-      totalPages: Math.max(1, Math.ceil(total / limit)),
     });
   } catch (_error) {
     return res.status(500).json({ message: "Failed to fetch names." });
@@ -98,15 +180,29 @@ async function getAllNames(_req, res) {
 async function getNamesByCategory(req, res) {
   try {
     const category = req.params.category?.trim();
+    const country = req.query.country?.toString().trim() || "India";
+    const state = req.query.state?.toString().trim();
 
     if (!category) {
       return res.status(400).json({ message: "Category is required." });
     }
 
-    const names = await BabyName.find({
+    const filter = {
       category: new RegExp(`^${category}$`, "i"),
-    }).sort({ rating: -1, name: 1 });
-    console.log(names);
+    };
+
+    if (country === "India") {
+      filter.$or = [{ country: /^India$/i }, { country: { $exists: false } }];
+    } else {
+      filter.country = new RegExp(`^${country}$`, "i");
+    }
+
+    if (state && state !== "All") {
+      filter.state = new RegExp(`^${state}$`, "i");
+    }
+
+    const names = await BabyName.find(filter).sort({ rating: -1, name: 1 });
+
     return res.status(200).json(names);
   } catch (_error) {
     return res
@@ -118,6 +214,8 @@ async function getNamesByCategory(req, res) {
 async function searchNames(req, res) {
   try {
     const query = req.query.q?.toString().trim();
+    const country = req.query.country?.toString().trim() || "India";
+    const state = req.query.state?.toString().trim();
 
     if (!query) {
       return res
@@ -125,9 +223,24 @@ async function searchNames(req, res) {
         .json({ message: "Query parameter q is required." });
     }
 
-    const names = await BabyName.find({
-      name: { $regex: query, $options: "i" },
-    }).sort({ rating: -1, name: 1 });
+    const filter = {
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { meaning: { $regex: query, $options: "i" } },
+      ],
+    };
+
+    if (country === "India") {
+      filter.$or = [{ country: /^India$/i }, { country: { $exists: false } }];
+    } else {
+      filter.country = new RegExp(`^${country}$`, "i");
+    }
+
+    if (state && state !== "All") {
+      filter.state = new RegExp(`^${state}$`, "i");
+    }
+
+    const names = await BabyName.find(filter).sort({ rating: -1, name: 1 });
 
     return res.status(200).json(names);
   } catch (_error) {
@@ -206,6 +319,105 @@ async function deleteName(req, res) {
   }
 }
 
+async function uploadNames(req, res) {
+  try {
+    const records = Array.isArray(req.body)
+      ? req.body
+      : Array.isArray(req.body?.names)
+        ? req.body.names
+        : null;
+
+    if (!records) {
+      return res.status(400).json({
+        message: "Provide a JSON array or { names: [] } payload.",
+      });
+    }
+
+    const errors = [];
+    const validRecords = [];
+    const batchDuplicateKeys = new Set();
+
+    records.forEach((record, index) => {
+      const normalized = normalizeUploadRecord(record);
+      const validationError = validatePayload(normalized);
+
+      if (validationError) {
+        errors.push({ index, reason: validationError, record });
+        return;
+      }
+
+      const dedupeKey = `${normalized.name.toLowerCase()}::${normalized.category.toLowerCase()}`;
+
+      if (batchDuplicateKeys.has(dedupeKey)) {
+        errors.push({
+          index,
+          reason: "Duplicate record in payload for same name and category.",
+          record,
+        });
+        return;
+      }
+
+      batchDuplicateKeys.add(dedupeKey);
+      validRecords.push({ index, payload: normalized, dedupeKey, record });
+    });
+
+    if (validRecords.length === 0) {
+      return res.status(200).json({
+        successCount: 0,
+        failedCount: errors.length,
+        errors,
+      });
+    }
+
+    const lookupKeys = Array.from(batchDuplicateKeys);
+    const existing = await BabyName.aggregate([
+      {
+        $project: {
+          _id: 0,
+          key: {
+            $concat: [{ $toLower: "$name" }, "::", { $toLower: "$category" }],
+          },
+        },
+      },
+      {
+        $match: {
+          key: { $in: lookupKeys },
+        },
+      },
+    ]);
+
+    const existingKeys = new Set(existing.map((item) => item.key));
+
+    const toInsert = [];
+
+    validRecords.forEach(({ index, payload, dedupeKey, record }) => {
+      if (existingKeys.has(dedupeKey)) {
+        errors.push({
+          index,
+          reason: "Duplicate record already exists for same name and category.",
+          record,
+        });
+        return;
+      }
+
+      toInsert.push(payload);
+      existingKeys.add(dedupeKey);
+    });
+
+    if (toInsert.length > 0) {
+      await BabyName.insertMany(toInsert, { ordered: false });
+    }
+
+    return res.status(200).json({
+      successCount: toInsert.length,
+      failedCount: errors.length,
+      errors,
+    });
+  } catch (_error) {
+    return res.status(500).json({ message: "Failed to upload names JSON." });
+  }
+}
+
 module.exports = {
   getAllNames,
   getNamesByCategory,
@@ -214,4 +426,5 @@ module.exports = {
   createName,
   updateName,
   deleteName,
+  uploadNames,
 };

@@ -2,6 +2,15 @@ export type GenderFilter = "All" | "Boy" | "Girl";
 
 export type NameGender = "Boy" | "Girl" | "Unisex";
 
+export type CountryOption = string;
+export type StateOption = string;
+
+export type CountryItem = {
+  code: string;
+  label: string;
+  flag: string;
+};
+
 export type BabyName = {
   _id: string;
   name: string;
@@ -9,6 +18,8 @@ export type BabyName = {
   origin: string;
   gender: NameGender;
   category: string;
+  country?: string;
+  state?: string;
   rating?: number;
   favoriteCount?: number;
   favoriteId?: string;

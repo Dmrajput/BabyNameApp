@@ -45,6 +45,8 @@ type NameFormState = {
   origin: string;
   gender: NameGender;
   category: string;
+  country: string;
+  state: string;
   rating: string;
 };
 
@@ -54,6 +56,8 @@ const initialForm: NameFormState = {
   origin: "",
   gender: "Boy",
   category: "Trending",
+  country: "India",
+  state: "Gujarat",
   rating: "4",
 };
 
@@ -139,6 +143,8 @@ export const AdminScreen = () => {
       origin: item.origin,
       gender: item.gender,
       category: item.category,
+      country: item.country ?? "",
+      state: item.state ?? "",
       rating: String(item.rating ?? 0),
     });
     setIsFormVisible(true);
@@ -166,6 +172,8 @@ export const AdminScreen = () => {
       form.meaning.trim() &&
       form.origin.trim() &&
       form.category.trim() &&
+      form.country.trim() &&
+      form.state.trim() &&
       Number.isFinite(rating) &&
       rating >= 1 &&
       rating <= 5
@@ -187,6 +195,8 @@ export const AdminScreen = () => {
       origin: form.origin.trim(),
       gender: form.gender,
       category: form.category,
+      country: form.country.trim(),
+      state: form.state.trim(),
       rating: Number(form.rating),
     };
 
@@ -429,6 +439,20 @@ export const AdminScreen = () => {
                 value={form.origin}
                 onChangeText={(value) => setField("origin", value)}
                 placeholder="Origin"
+                style={styles.input}
+              />
+
+              <TextInput
+                value={form.country}
+                onChangeText={(value) => setField("country", value)}
+                placeholder="Country"
+                style={styles.input}
+              />
+
+              <TextInput
+                value={form.state}
+                onChangeText={(value) => setField("state", value)}
+                placeholder="State"
                 style={styles.input}
               />
 
