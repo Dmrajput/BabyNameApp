@@ -61,6 +61,7 @@ export const NameListScreen = ({ route, navigation }: Props) => {
   const [selectedLetter, setSelectedLetter] = useState<string>("All");
   const [showStateModal, setShowStateModal] = useState(false);
   const [names, setNames] = useState<BabyName[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string>("");
@@ -239,6 +240,7 @@ export const NameListScreen = ({ route, navigation }: Props) => {
         setNames((previous) =>
           pageNumber === 1 ? response.data : [...previous, ...response.data],
         );
+        setTotalCount(response.total);
         pageRef.current = response.currentPage;
 
         // Stop pagination when server returns an empty page to avoid
@@ -251,6 +253,7 @@ export const NameListScreen = ({ route, navigation }: Props) => {
         setError("Unable to load names. Please try again.");
         if (pageNumber === 1) {
           setNames([]);
+          setTotalCount(0);
         }
       } finally {
         loadingRef.current = false;
@@ -276,6 +279,7 @@ export const NameListScreen = ({ route, navigation }: Props) => {
     pageRef.current = 1;
     hasMoreRef.current = true;
     setNames([]);
+    setTotalCount(0);
     void fetchNames(1, true);
   }, [
     fetchNames,
@@ -377,7 +381,7 @@ export const NameListScreen = ({ route, navigation }: Props) => {
 
         <View style={styles.inlineCountBadgeCompact}>
           <Text style={styles.inlineCountTextCompact}>
-            {loading ? "..." : names.length}
+            {loading ? "..." : totalCount}
           </Text>
         </View>
       </View>
