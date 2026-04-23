@@ -1,9 +1,46 @@
 const BabyName = require("../models/BabyName");
 
 const allowedGenders = ["Boy", "Girl", "Unisex"];
+const genderAliasMap = {
+  boy: "Boy",
+  male: "Boy",
+  girl: "Girl",
+  female: "Girl",
+  unisex: "Unisex",
+};
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeGender(value) {
+  const normalizedValue = value?.toString().trim();
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  if (normalizedValue.toLowerCase() === "all") {
+    return "All";
+  }
+
+  return genderAliasMap[normalizedValue.toLowerCase()] || normalizedValue;
+}
+
+function getGenderQueryValues(gender) {
+  if (gender === "Boy") {
+    return ["Boy", "boy", "Male", "male"];
+  }
+
+  if (gender === "Girl") {
+    return ["Girl", "girl", "Female", "female"];
+  }
+
+  if (gender === "Unisex") {
+    return ["Unisex", "unisex"];
+  }
+
+  return [gender];
 }
 
 function buildNamePayload(body) {
@@ -14,7 +51,7 @@ function buildNamePayload(body) {
     name: body.name?.toString().trim(),
     meaning: body.meaning?.toString().trim(),
     origin: body.origin?.toString().trim(),
-    gender: body.gender?.toString().trim(),
+    gender: normalizeGender(body.gender),
     category: body.category?.toString().trim(),
     country: rawCountry || "India",
     state: rawState || "Unknown",
@@ -57,7 +94,7 @@ function normalizeUploadRecord(record) {
     name: raw.name?.toString().trim(),
     meaning: raw.meaning?.toString().trim(),
     origin: raw.origin?.toString().trim(),
-    gender: raw.gender?.toString().trim(),
+    gender: normalizeGender(raw.gender),
     category: raw.category?.toString().trim(),
     country: raw.country?.toString().trim() || "India",
     state: raw.state?.toString().trim() || "Unknown",
@@ -68,7 +105,7 @@ function normalizeUploadRecord(record) {
 function buildListQuery(query, options = {}) {
   const applyCountryFilter = options.applyCountryFilter ?? true;
   const search = query.search?.toString().trim();
-  const gender = query.gender?.toString().trim();
+  const gender = normalizeGender(query.gender);
   const letter = query.letter?.toString().trim();
   const category = query.category?.toString().trim();
   const country = query.country?.toString().trim() || "India";
@@ -86,7 +123,7 @@ function buildListQuery(query, options = {}) {
   }
 
   if (gender && gender !== "All" && allowedGenders.includes(gender)) {
-    andFilters.push({ gender });
+    andFilters.push({ gender: { $in: getGenderQueryValues(gender) } });
   }
 
   if (letter && letter !== "All") {
