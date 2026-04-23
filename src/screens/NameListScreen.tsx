@@ -39,9 +39,9 @@ const AD_SHOW_DELAY_MS = 300;
 const AD_RETRY_DELAY_MS = 15_000;
 const PAGE_SIZE = 100;
 
-const INTERSTITIAL_TEST_OR_PROD_ID = __DEV__
-  ? TestIds.INTERSTITIAL
-  : process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID;
+const INTERSTITIAL_TEST_OR_PROD_ID =
+  process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID ||
+  (__DEV__ ? TestIds.INTERSTITIAL : undefined);
 
 const getRandomCooldownMs = () => {
   // Show interstitial in a 90-120s window to avoid aggressive ad frequency.

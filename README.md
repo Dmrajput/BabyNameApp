@@ -49,3 +49,17 @@ Join our community of developers creating universal apps.
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 # BabyNameApp
+
+## AdMob production setup
+
+Set these variables in `.env` before making a production build:
+
+- `EXPO_PUBLIC_ADMOB_APP_ID_ANDROID`
+- `EXPO_PUBLIC_ADMOB_APP_ID_IOS`
+- `EXPO_PUBLIC_ADMOB_BANNER_ANDROID`
+- `EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID`
+
+Notes:
+
+- Screen-level ad units now prefer your configured IDs. If an ID is missing in development, the app falls back to Google test IDs.
+- Build-time AdMob app IDs are read from env via `app.config.js`.

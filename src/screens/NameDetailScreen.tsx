@@ -2,13 +2,13 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Pressable,
-    Share,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 import { useFavorites } from "../context/FavoritesContext";
@@ -71,9 +71,13 @@ export const NameDetailScreen = ({ route }: Props) => {
       return null;
     }
 
-    return __DEV__
-      ? adsModule.TestIds.BANNER
-      : process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID || null;
+    const configuredBannerId = process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID;
+
+    if (configuredBannerId) {
+      return configuredBannerId;
+    }
+
+    return __DEV__ ? adsModule.TestIds.BANNER : null;
   }, [adsModule]);
 
   const [babyName, setBabyName] = useState<BabyName | null>(null);
