@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 
+const PROD_FALLBACK_URL = "https://babynameapp.onrender.com";
 const envUrl = (process.env.EXPO_PUBLIC_API_URL || "").replace(/\/$/, "");
 const envIsLocalhost = /localhost|127\.0\.0\.1/.test(envUrl);
 
@@ -10,13 +11,16 @@ const hostUri =
 const detectedHost = hostUri ? hostUri.split(":")[0] : "";
 const platformFallback =
   Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
+const runtimeFallback = __DEV__ ? platformFallback : PROD_FALLBACK_URL;
 
 const API_BASE_URL = (
   envUrl && !envIsLocalhost
     ? envUrl
-    : detectedHost
-      ? `http://${detectedHost}:5000`
-      : platformFallback
+    : envUrl && envIsLocalhost && !detectedHost && !__DEV__
+      ? PROD_FALLBACK_URL
+      : detectedHost
+        ? `http://${detectedHost}:5000`
+        : runtimeFallback
 ).replace(/\/$/, "");
 
 async function buildError(response) {

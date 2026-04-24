@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { getApiBaseUrl } from '@/src/utils/api';
+import { getApiBaseUrl } from "@/src/utils/api";
 import {
-  getSession,
   logout as clearStoredSession,
+  getSession,
   saveSession,
   SessionUser,
-} from '@/src/utils/sessionManager';
+} from "@/src/utils/sessionManager";
 
 type SignupPayload = {
   name: string;
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserData(session.user);
         }
       } catch (error) {
-        console.warn('Unable to restore session from storage:', error);
+        console.warn("Unable to restore session from storage:", error);
       } finally {
         setIsLoading(false);
       }
@@ -65,31 +65,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserData(response.user);
   };
 
-  const requestAuth = async (endpoint: '/auth/login' | '/auth/signup', payload: object) => {
-    const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+  const requestAuth = async (
+    endpoint: "/auth/login" | "/auth/signup",
+    payload: object,
+  ) => {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    const data = (await response.json()) as AuthApiResponse;
+      const data = (await response.json()) as AuthApiResponse;
 
-    if (!response.ok) {
-      throw new Error(data.message ?? 'Authentication failed. Please try again.');
+      if (!response.ok) {
+        throw new Error(
+          data.message ?? "Authentication failed. Please try again.",
+        );
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(
+          "Unable to reach server. Please check internet connection and API URL.",
+        );
+      }
+
+      throw error;
     }
-
-    return data;
   };
 
   const login = async (payload: LoginPayload) => {
-    const data = await requestAuth('/auth/login', payload);
+    const data = await requestAuth("/auth/login", payload);
     await applySession(data);
   };
 
   const signup = async (payload: SignupPayload) => {
-    const data = await requestAuth('/auth/signup', payload);
+    const data = await requestAuth("/auth/signup", payload);
     await applySession(data);
   };
 
@@ -114,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used inside AuthProvider.');
+    throw new Error("useAuth must be used inside AuthProvider.");
   }
 
   return context;

@@ -1,7 +1,9 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-const fallbackApiUrl = 'http://localhost:5000';
+const LOCAL_FALLBACK_API_URL =
+  Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
+const PRODUCTION_FALLBACK_API_URL = 'https://babynameapp.onrender.com';
 
 function normalizeBaseUrl(url: string): string {
   return url.trim().replace(/\/+$/, '');
@@ -24,15 +26,19 @@ export function getApiBaseUrl(): string {
       return normalizeBaseUrl(normalized.replace(/localhost|127\.0\.0\.1/i, host));
     }
 
+    if (!host && shouldReplaceLocalhost(normalized) && !__DEV__) {
+      return PRODUCTION_FALLBACK_API_URL;
+    }
+
     return normalized;
   }
 
   if (!hostUri) {
-    return fallbackApiUrl;
+    return __DEV__ ? LOCAL_FALLBACK_API_URL : PRODUCTION_FALLBACK_API_URL;
   }
 
   if (!host) {
-    return fallbackApiUrl;
+    return __DEV__ ? LOCAL_FALLBACK_API_URL : PRODUCTION_FALLBACK_API_URL;
   }
 
   return normalizeBaseUrl(`http://${host}:5000`);
