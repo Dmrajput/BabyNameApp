@@ -114,10 +114,11 @@ function buildListQuery(query, options = {}) {
   const andFilters = [];
 
   if (search) {
+    const escapedSearch = escapeRegex(search);
     andFilters.push({
       $or: [
-        { name: { $regex: search, $options: "i" } },
-        { meaning: { $regex: search, $options: "i" } },
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { meaning: { $regex: escapedSearch, $options: "i" } },
       ],
     });
   }
@@ -224,8 +225,9 @@ async function getNamesByCategory(req, res) {
       return res.status(400).json({ message: "Category is required." });
     }
 
+    const escapedCategory = escapeRegex(category);
     const filter = {
-      category: new RegExp(`^${category}$`, "i"),
+      category: new RegExp(`^${escapedCategory}$`, "i"),
     };
 
     if (country === "India") {
@@ -260,21 +262,24 @@ async function searchNames(req, res) {
         .json({ message: "Query parameter q is required." });
     }
 
+    const escapedQuery = escapeRegex(query);
     const filter = {
       $or: [
-        { name: { $regex: query, $options: "i" } },
-        { meaning: { $regex: query, $options: "i" } },
+        { name: { $regex: escapedQuery, $options: "i" } },
+        { meaning: { $regex: escapedQuery, $options: "i" } },
       ],
     };
 
     if (country === "India") {
       filter.$or = [{ country: /^India$/i }, { country: { $exists: false } }];
     } else {
-      filter.country = new RegExp(`^${country}$`, "i");
+      const escapedCountry = escapeRegex(country);
+      filter.country = new RegExp(`^${escapedCountry}$`, "i");
     }
 
     if (state && state !== "All") {
-      filter.state = new RegExp(`^${state}$`, "i");
+      const escapedState = escapeRegex(state);
+      filter.state = new RegExp(`^${escapedState}$`, "i");
     }
 
     const names = await BabyName.find(filter).sort({ rating: -1, name: 1 });

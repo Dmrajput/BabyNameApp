@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
@@ -14,10 +14,29 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    country: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "Unknown",
+    },
     password: {
       type: String,
       required: true,
       minlength: 6,
+    },
+    babyName: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    babyDOB: {
+      type: Date,
+      default: null,
+    },
+    pregnancyStartDate: {
+      type: Date,
+      default: null,
     },
   },
   {
@@ -25,4 +44,4 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.model('BbUser', userSchema);
+module.exports = mongoose.model("BbUser", userSchema);

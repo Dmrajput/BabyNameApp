@@ -2,7 +2,11 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 const PROD_FALLBACK_URL = "https://babynameapp.onrender.com";
-const envUrl = (process.env.EXPO_PUBLIC_API_URL || "").replace(/\/$/, "");
+
+const normalizeBaseUrl = (value) =>
+  value.trim().replace(/\/+$/, "").replace(/\/api$/i, "");
+
+const envUrl = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL || "");
 const envIsLocalhost = /localhost|127\.0\.0\.1/.test(envUrl);
 
 const hostUri =

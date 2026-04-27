@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 type StoredUser = {
   name?: string;
   email?: string;
+  country?: string;
 };
 
 export const ProfileScreen = () => {
@@ -33,6 +34,7 @@ export const ProfileScreen = () => {
       setUser({
         name: userData.name,
         email: userData.email,
+        country: userData.country,
       });
     } catch {
       setUser(null);
@@ -104,6 +106,13 @@ export const ProfileScreen = () => {
           <Text style={styles.infoLabel}>Email</Text>
           <Text style={styles.infoValue}>
             {user?.email?.trim() || "Not available"}
+          </Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Country</Text>
+          <Text style={styles.infoValue}>
+            {user?.country?.trim() || "Not available"}
           </Text>
         </View>
       </View>

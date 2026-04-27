@@ -249,8 +249,15 @@ export const NameListScreen = ({ route, navigation }: Props) => {
           response.data.length > 0 &&
           response.currentPage < response.totalPages;
         hasMoreRef.current = nextHasMore;
-      } catch {
-        setError("Unable to load names. Please try again.");
+      } catch (error) {
+        const message =
+          error instanceof Error && error.message
+            ? error.message
+            : "Unable to load names. Please try again.";
+        setError(message);
+        if (__DEV__) {
+          console.error("Failed to load names:", error);
+        }
         if (pageNumber === 1) {
           setNames([]);
           setTotalCount(0);

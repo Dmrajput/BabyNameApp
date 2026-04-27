@@ -7,11 +7,13 @@ import {
   saveSession,
   SessionUser,
 } from "@/src/utils/sessionManager";
+import { apiService } from "@/src/services/api";
 
 type SignupPayload = {
   name: string;
   email: string;
   password: string;
+  country: string;
 };
 
 type LoginPayload = {
@@ -21,6 +23,7 @@ type LoginPayload = {
 
 type AuthContextType = {
   userToken: string | null;
+  token: string | null; // Alias for compatibility
   userData: SessionUser | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
@@ -61,6 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const applySession = async (response: AuthApiResponse) => {
     await saveSession(response.token, response.user);
+    // Also set token in API service
+    await apiService.setTokens(response.token);
     setUserToken(response.token);
     setUserData(response.user);
   };
@@ -110,12 +115,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await clearStoredSession();
+    await apiService.clearTokens();
     setUserToken(null);
     setUserData(null);
   };
 
   const value = {
     userToken,
+    token: userToken, // Alias for compatibility
     userData,
     isLoading,
     login,

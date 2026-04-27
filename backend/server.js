@@ -9,6 +9,16 @@ const aiRoutes = require("./routes/aiRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const countryRoutes = require("./routes/countryRoutes");
+
+// Baby Care Routes
+const feedingRoutes = require("./routes/feedingRoutes");
+const sleepRoutes = require("./routes/sleepRoutes");
+const diaperRoutes = require("./routes/diaperRoutes");
+const vaccinationRoutes = require("./routes/vaccinationRoutes");
+const pregnancyRoutes = require("./routes/pregnancyRoutes");
+const milestoneRoutes = require("./routes/milestoneRoutes");
+const journalRoutes = require("./routes/journalRoutes");
+
 const { requireAdminEmail } = require("./middleware/adminAuth");
 const { uploadNames } = require("./controllers/nameController");
 
@@ -31,6 +41,15 @@ app.use("/countries", countryRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/countries", countryRoutes);
 app.use("/api", aiRoutes);
+
+// Baby Care API Routes
+app.use("/api/feeding", feedingRoutes);
+app.use("/api/sleep", sleepRoutes);
+app.use("/api/diaper", diaperRoutes);
+app.use("/api/vaccination", vaccinationRoutes);
+app.use("/api/pregnancy", pregnancyRoutes);
+app.use("/api/milestone", milestoneRoutes);
+app.use("/api/journal", journalRoutes);
 
 async function startServer() {
   await mongoose.connect(config.mongodbUri);

@@ -1,12 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const TOKEN_KEY = 'userToken';
-const USER_KEY = 'userData';
+const TOKEN_KEY = "userToken";
+const USER_KEY = "userData";
 
 export type SessionUser = {
   id: string;
   name: string;
   email: string;
+  country?: string;
 };
 
 export type SessionData = {
@@ -14,7 +15,10 @@ export type SessionData = {
   user: SessionUser;
 };
 
-export async function saveSession(token: string, user: SessionUser): Promise<void> {
+export async function saveSession(
+  token: string,
+  user: SessionUser,
+): Promise<void> {
   await AsyncStorage.setItem(TOKEN_KEY, token);
   await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
 }

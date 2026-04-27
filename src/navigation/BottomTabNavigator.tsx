@@ -8,6 +8,7 @@ import { FavoritesScreen } from "../screens/FavoritesScreen";
 import { GeneratorScreen } from "../screens/GeneratorScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { TabParamList } from "../types";
+import { BabyCareStackNavigator } from "./BabyCareStackNavigator";
 import { HomeStackNavigator } from "./HomeStackNavigator";
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -46,6 +47,16 @@ export const BottomTabNavigator = () => {
             return (
               <MaterialCommunityIcons
                 name="creation"
+                size={size}
+                color={color}
+              />
+            );
+          }
+
+          if (route.name === "BabyCare") {
+            return (
+              <MaterialCommunityIcons
+                name="baby-face"
                 size={size}
                 color={color}
               />
@@ -91,6 +102,11 @@ export const BottomTabNavigator = () => {
         name="Generator"
         component={GeneratorScreen}
         options={{ title: "Generator" }}
+      />
+      <Tab.Screen
+        name="BabyCare"
+        component={BabyCareStackNavigator}
+        options={{ title: "BabyCare" }}
       />
       <Tab.Screen
         name="Favorites"

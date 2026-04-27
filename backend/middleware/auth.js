@@ -1,45 +1,38 @@
 const jwt = require("jsonwebtoken");
-
 const config = require("../config/env");
 const BbUser = require("../models/BbUser");
 
-async function requireAuth(req, res, next) {
+const auth = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization || "";
+    // Get token from header
+    const token = req.headers.authorization?.split(" ")[1];
 
-    if (!authHeader.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ message: "Missing or invalid auth token." });
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
     }
 
-    const token = authHeader.slice("Bearer ".length).trim();
+    // Verify token using your config
     const decoded = jwt.verify(token, config.jwtSecret);
 
-    if (!decoded?.id) {
-      return res.status(401).json({ message: "Invalid auth token payload." });
-    }
-
-    const user = await BbUser.findById(decoded.id).select("_id name email");
+    // Get user from database
+    const user = await BbUser.findById(decoded.id);
 
     if (!user) {
-      return res
-        .status(401)
-        .json({ message: "User not found for this token." });
+      return res.status(401).json({ error: "User not found" });
     }
 
-    req.user = {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-    };
-
-    return next();
-  } catch (_error) {
-    return res.status(401).json({ message: "Invalid or expired auth token." });
+    // Attach user to request
+    req.user = user;
+    next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired" });
+    }
+    res.status(401).json({ error: "Invalid token" });
   }
-}
-
-module.exports = {
-  requireAuth,
 };
+
+// Alias for compatibility with existing routes
+const requireAuth = auth;
+
+module.exports = { auth, requireAuth };
