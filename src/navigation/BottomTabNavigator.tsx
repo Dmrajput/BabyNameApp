@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
 import { AdminScreen } from "../screens/AdminScreen";
@@ -16,8 +17,12 @@ const ADMIN_EMAIL = "divyarajsinh5216@gmail.com";
 
 export const BottomTabNavigator = () => {
   const { userData } = useAuth();
+  const insets = useSafeAreaInsets();
   const isAdmin =
     (userData?.email ?? "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  const baseTabBarHeight = 64;
+  const tabBarPaddingBottom = Math.max(insets.bottom, 8);
 
   return (
     <Tab.Navigator
@@ -28,8 +33,8 @@ export const BottomTabNavigator = () => {
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 0,
-          height: 64,
-          paddingBottom: 8,
+          height: baseTabBarHeight + insets.bottom,
+          paddingBottom: tabBarPaddingBottom,
           paddingTop: 8,
         },
         tabBarIcon: ({ color, size }) => {

@@ -4,9 +4,11 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -20,6 +22,11 @@ import { CategoryItem, HomeStackParamList } from "../types";
 type Props = NativeStackScreenProps<HomeStackParamList, "Home">;
 
 const CATEGORIES_STORAGE_KEY = "categoriesCache";
+const COUNTRY_MODAL_MAX_HEIGHT = Math.min(
+  Dimensions.get("window").height * 0.75,
+  520,
+);
+const COUNTRY_SCROLL_MAX_HEIGHT = Math.max(COUNTRY_MODAL_MAX_HEIGHT - 16, 280);
 
 export const HomeScreen = ({ navigation }: Props) => {
   const { selectedCountry, countries, setSelectedCountry, isCountryLoading } =
@@ -149,35 +156,40 @@ export const HomeScreen = ({ navigation }: Props) => {
           onPress={() => setShowCountryModal(false)}
         >
           <View style={styles.modalCard}>
-            {countries.map((item) => {
-              const active = item.code === selectedCountry;
+            <ScrollView
+              style={styles.countryScroll}
+              keyboardShouldPersistTaps="handled"
+            >
+              {countries.map((item) => {
+                const active = item.code === selectedCountry;
 
-              return (
-                <Pressable
-                  key={item.code}
-                  style={[
-                    styles.countryOption,
-                    active && styles.countryOptionActive,
-                  ]}
-                  onPress={() => {
-                    void setSelectedCountry(item.code);
-                    setShowCountryModal(false);
-                  }}
-                >
-                  <Text style={styles.countryOptionText}>
-                    {item.flag} {item.label}
-                  </Text>
+                return (
+                  <Pressable
+                    key={item.code}
+                    style={[
+                      styles.countryOption,
+                      active && styles.countryOptionActive,
+                    ]}
+                    onPress={() => {
+                      void setSelectedCountry(item.code);
+                      setShowCountryModal(false);
+                    }}
+                  >
+                    <Text style={styles.countryOptionText}>
+                      {item.flag} {item.label}
+                    </Text>
 
-                  {active ? (
-                    <MaterialCommunityIcons
-                      name="check"
-                      size={18}
-                      color="#0F766E"
-                    />
-                  ) : null}
-                </Pressable>
-              );
-            })}
+                    {active ? (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={18}
+                        color="#0F766E"
+                      />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
         </Pressable>
       </Modal>
@@ -251,6 +263,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 8,
     paddingHorizontal: 10,
+    maxHeight: COUNTRY_MODAL_MAX_HEIGHT,
+    width: "100%",
+  },
+  countryScroll: {
+    maxHeight: COUNTRY_SCROLL_MAX_HEIGHT,
   },
   countryOption: {
     minHeight: 42,
