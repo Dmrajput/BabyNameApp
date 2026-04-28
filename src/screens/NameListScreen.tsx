@@ -16,9 +16,12 @@ import {
   StyleSheet,
   Text,
   View,
+  ViewToken,
 } from "react-native";
 import {
   AdEventType,
+  BannerAd,
+  BannerAdSize,
   InterstitialAd,
   TestIds,
 } from "react-native-google-mobile-ads";
@@ -34,14 +37,27 @@ import { BabyName, GenderFilter, HomeStackParamList } from "../types";
 type Props = NativeStackScreenProps<HomeStackParamList, "NameList">;
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const AD_TRIGGER_EVERY_OPENS = 10;
-const AD_SHOW_DELAY_MS = 300;
 const AD_RETRY_DELAY_MS = 15_000;
+const BANNER_FIRST_AD_AFTER = 10;
+const BANNER_AD_FREQUENCY = 20;
+const INTERSTITIAL_ELIGIBLE_FIRST = 50;
+const INTERSTITIAL_ELIGIBLE_INTERVAL = 100;
 const PAGE_SIZE = 100;
 
-const INTERSTITIAL_TEST_OR_PROD_ID =
-  process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID ||
-  (__DEV__ ? TestIds.INTERSTITIAL : undefined);
+// const INTERSTITIAL_TEST_OR_PROD_ID =
+//   process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID ||
+//   (__DEV__ ? TestIds.INTERSTITIAL : undefined);
+const INTERSTITIAL_TEST_OR_PROD_ID = TestIds.INTERSTITIAL;
+// const BANNER_TEST_OR_PROD_ID =
+//   process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID ||
+//   (__DEV__ ? TestIds.BANNER : undefined);
+const BANNER_TEST_OR_PROD_ID = TestIds.BANNER;
+type AdPlaceholder = {
+  type: "ad";
+  id: string;
+};
+
+type ListItem = BabyName | AdPlaceholder;
 
 const getRandomCooldownMs = () => {
   // Show interstitial in a 90-120s window to avoid aggressive ad frequency.
@@ -80,13 +96,14 @@ export const NameListScreen = ({ route, navigation }: Props) => {
         })
       : null,
   );
-  const openCountRef = useRef(0);
   const lastShownAtRef = useRef(0);
   const nextCooldownMsRef = useRef(getRandomCooldownMs());
   const isMountedRef = useRef(true);
   const isAdShowingRef = useRef(false);
-  const showTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAdEligibleRef = useRef(false);
+  const lastEligibilityTriggerRef = useRef(0);
+  const viewedNameIdsRef = useRef<Set<string>>(new Set());
 
   const tryShowInterstitial = useCallback(() => {
     const now = Date.now();
@@ -100,15 +117,17 @@ export const NameListScreen = ({ route, navigation }: Props) => {
       !interstitialRef.current ||
       isAdShowingRef.current
     ) {
-      return;
+      return false;
     }
 
     try {
       isAdShowingRef.current = true;
       interstitialRef.current.show();
+      return true;
     } catch {
       isAdShowingRef.current = false;
       // Never block user flow on ad failures.
+      return false;
     }
   }, [isInterstitialLoaded]);
 
@@ -184,10 +203,6 @@ export const NameListScreen = ({ route, navigation }: Props) => {
       isMountedRef.current = false;
       isAdShowingRef.current = false;
 
-      if (showTimeoutRef.current) {
-        clearTimeout(showTimeoutRef.current);
-      }
-
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
@@ -222,6 +237,12 @@ export const NameListScreen = ({ route, navigation }: Props) => {
       setIsLoadingMore(pageNumber > 1);
 
       try {
+        if (pageNumber === 1 && reset) {
+          viewedNameIdsRef.current = new Set();
+          isAdEligibleRef.current = false;
+          lastEligibilityTriggerRef.current = 0;
+        }
+
         if (pageNumber === 1) {
           setError("");
         }
@@ -311,30 +332,123 @@ export const NameListScreen = ({ route, navigation }: Props) => {
   }, [fetchNames]);
 
   const renderNameCard = useCallback(
-    ({ item }: { item: BabyName }) => (
-      <NameCard
-        compact
-        item={item}
-        isFavorite={isFavorite(item._id)}
-        onToggleFavorite={() => toggleFavorite(item)}
-        onPress={() => {
-          openCountRef.current += 1;
-          navigation.navigate("NameDetail", { nameId: item._id });
+    ({ item }: { item: ListItem }) => {
+      if ("type" in item && item.type === "ad") {
+        if (!BANNER_TEST_OR_PROD_ID) {
+          return null;
+        }
 
-          if (openCountRef.current % AD_TRIGGER_EVERY_OPENS === 0) {
-            if (showTimeoutRef.current) {
-              clearTimeout(showTimeoutRef.current);
+        return (
+          <View style={styles.bannerWrap}>
+            <BannerAd
+              unitId={BANNER_TEST_OR_PROD_ID}
+              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+              requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+            />
+          </View>
+        );
+      }
+
+      return (
+        <NameCard
+          compact
+          item={item}
+          isFavorite={isFavorite(item._id)}
+          onToggleFavorite={() => toggleFavorite(item)}
+          onPress={() => {
+            navigation.navigate("NameDetail", { nameId: item._id });
+
+            if (isAdEligibleRef.current) {
+              const didShow = tryShowInterstitial();
+              if (didShow) {
+                isAdEligibleRef.current = false;
+              }
             }
-
-            showTimeoutRef.current = setTimeout(() => {
-              tryShowInterstitial();
-            }, AD_SHOW_DELAY_MS);
-          }
-        }}
-      />
-    ),
+          }}
+        />
+      );
+    },
     [isFavorite, navigation, toggleFavorite, tryShowInterstitial],
   );
+
+  const listData = useMemo(() => {
+    if (!BANNER_TEST_OR_PROD_ID || names.length === 0) {
+      return names as ListItem[];
+    }
+
+    const items: ListItem[] = [];
+
+    names.forEach((item, index) => {
+      items.push(item);
+      const position = index + 1;
+      if (
+        position >= BANNER_FIRST_AD_AFTER &&
+        (position - BANNER_FIRST_AD_AFTER) % BANNER_AD_FREQUENCY === 0
+      ) {
+        items.push({ type: "ad", id: `ad-${position}` });
+      }
+    });
+
+    return items;
+  }, [names]);
+
+  const keyExtractor = useCallback((item: ListItem) => {
+    if ("type" in item && item.type === "ad") {
+      return item.id;
+    }
+
+    return item._id;
+  }, []);
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 60,
+  }).current;
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      let didAdd = false;
+
+      viewableItems.forEach((token) => {
+        const item = token.item as ListItem | undefined;
+        if (!item) {
+          return;
+        }
+
+        if ("type" in item && item.type === "ad") {
+          return;
+        }
+
+        const nameItem = item as BabyName;
+        if (!nameItem._id || viewedNameIdsRef.current.has(nameItem._id)) {
+          return;
+        }
+
+        viewedNameIdsRef.current.add(nameItem._id);
+        didAdd = true;
+      });
+
+      if (!didAdd) {
+        return;
+      }
+
+      const viewedCount = viewedNameIdsRef.current.size;
+      if (viewedCount < INTERSTITIAL_ELIGIBLE_FIRST) {
+        return;
+      }
+
+      const offset = viewedCount - INTERSTITIAL_ELIGIBLE_FIRST;
+      if (offset % INTERSTITIAL_ELIGIBLE_INTERVAL !== 0) {
+        return;
+      }
+
+      if (viewedCount <= lastEligibilityTriggerRef.current) {
+        return;
+      }
+
+      isAdEligibleRef.current = true;
+      lastEligibilityTriggerRef.current = viewedCount;
+    },
+  ).current;
 
   const stickyHeader = (
     <View style={styles.stickyHeaderWrap}>
@@ -442,11 +556,13 @@ export const NameListScreen = ({ route, navigation }: Props) => {
       {stickyHeader}
 
       <FlatList
-        data={names}
-        keyExtractor={(item) => item._id}
+        data={listData}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="always"
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
         initialNumToRender={16}
         maxToRenderPerBatch={18}
         windowSize={9}
@@ -624,6 +740,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 12,
+  },
+  bannerWrap: {
+    alignItems: "center",
+    paddingVertical: 6,
   },
   loader: {
     marginVertical: 6,
