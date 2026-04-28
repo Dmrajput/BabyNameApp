@@ -44,14 +44,13 @@ const INTERSTITIAL_ELIGIBLE_FIRST = 50;
 const INTERSTITIAL_ELIGIBLE_INTERVAL = 100;
 const PAGE_SIZE = 100;
 
-// const INTERSTITIAL_TEST_OR_PROD_ID =
-//   process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID ||
-//   (__DEV__ ? TestIds.INTERSTITIAL : undefined);
-const INTERSTITIAL_TEST_OR_PROD_ID = TestIds.INTERSTITIAL;
-// const BANNER_TEST_OR_PROD_ID =
-//   process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID ||
-//   (__DEV__ ? TestIds.BANNER : undefined);
-const BANNER_TEST_OR_PROD_ID = TestIds.BANNER;
+const INTERSTITIAL_TEST_OR_PROD_ID =
+  process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID ||
+  (__DEV__ ? TestIds.INTERSTITIAL : undefined);
+
+const BANNER_TEST_OR_PROD_ID =
+  process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID ||
+  (__DEV__ ? TestIds.BANNER : undefined);
 type AdPlaceholder = {
   type: "ad";
   id: string;
